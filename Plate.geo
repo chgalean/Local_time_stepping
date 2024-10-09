@@ -1,11 +1,12 @@
 // Gmsh project created on Sat Sep 28 23:01:22 2024
 //+
-Point(1) = {0, 0, 0, 0.2};
-Point(2) = {1, 0, 0, 0.2};
-Point(3) = {1, 1, 0, 0.2};
-Point(4) = {2, 1, 0, 0.2};
-Point(5) = {2, 2, 0, 0.2};
-Point(6) = {0, 2, 0, 0.2};
+h=0.05;
+Point(1) = {0, 0, 0, h};
+Point(2) = {1, 0, 0, h};
+Point(3) = {1, 1, 0, h};
+Point(4) = {2, 1, 0, h};
+Point(5) = {2, 2, 0, h};
+Point(6) = {0, 2, 0, h};
 
 
 //+
@@ -21,7 +22,9 @@ Line Loop(1) = {2, 3, 4, 5, 6, 1};
 Plane Surface(1) = {1};
 //+
 Physical Line(1) = {1};
-Physical Line(2) = {2,3,4,5,6};
+Physical Line(2) = {2,3};
+Physical Line(3) = {4};
+Physical Line(4) = {5,6};
 //+
 Physical Surface(3) = {1};
 

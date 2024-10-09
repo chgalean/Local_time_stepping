@@ -20,24 +20,35 @@
 #ESPACIO PARA EL LLAMADO DE FUNCIONES Y PAQUETES REQUERIDOS PARA LA SOLUCIÒN DEL SISTEMA
 
 using Plots
+using DelimitedFiles
+using SparseArrays, LinearAlgebra
 include("MeshGenerator0rder_1.jl")  #Funcion para importar la mall
-include("StiffnessElemental.jl")    #Funciòn para evaluar la matriz de rigidez elemental
+include("K_diff.jl")    #Funciòn para evaluar la matriz de rigidez elemental
 include("LoadElemental.jl")         #Funciòn para evaluar el vector de cargas elemental
-
+include("N_dN.jl")                  #Funciòn 
+include("Jacobian.jl")              #Funciòn 
+include("grad_N.jl")                #Funciòn 
+include("k_lm.jl")                  #Funciòn 
+include("Write_VTK.jl")                  #Funciòn 
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 
-plotmesh=1;  #1 para graficar la malla generada
-Q= 0;        # generaciòn de calor
-BounDir= 200; #condicion de frontera de Dirichlet
-qn= 0;       #Flujo de calor sobre el borde de Neumann
+plotmesh_flag=1;  #1 para graficar la malla generada
+file_name="Plate"
+file_name_mesh=file_name*".msh"
+file_name_output=file_name*".vtk"
 
+coef_k=1.0;    #Coeficiente del término difusivo
+Q= 0.0;        # generaciòn de calor
+BC=[0 20; 1 50; 0 100; 1 0]    #Se define una matriz con las condiciones de contorno del problema. Cada fila
+                        #se refiere a una de los bordes físicos del problema. El valor en la primera columna
+                        #define el tipo de condición de borde: 0:Dirichlet 1:Neumann
 
 #######################################################################################
 #DISCRETIZACION ESPACIAL
 
 #Mesh es la lectura del archivo .txt que contiene la informaciòn de la malla
-Mesh=open("/home/cfmoraless/Codigos/PoissonEquationPlate/Plate.msh");
+mesh_file=open(file_name_mesh);
 
 #Esta funciòn entrega como return entrega:
 #Numeros de nodos = Nnodos, 
@@ -46,147 +57,79 @@ Mesh=open("/home/cfmoraless/Codigos/PoissonEquationPlate/Plate.msh");
 #Matriz de conectividade=ConeMat
 
 
-Nnodos, NodalMesh, Nelem, ConeMat, BounCond= MeshGen(Mesh, plotmesh);
+Nnodos, NodalMesh, Nelem, ConeMat, BounCond= MeshGen(mesh_file, plotmesh_flag);
+#writedlm("output.txt", BounCond)
 
 #Se crea una matriz de rigidez global y el vector de cargas global
-Kglo=zeros(Nnodos, Nnodos);
+Kglo=spzeros(Nnodos, Nnodos);  #La matriz de rigidez se inicializa como una matriz tipo sparse
 Fglo=zeros(Nnodos, 1);
 
 for i in 1:Nelem
-
-    Kele= StiffnessElemental(NodalMesh, ConeMat, i);
+    Kele= K_diff(NodalMesh, ConeMat, i, coef_k)
     Fele=LoadElemental(NodalMesh, ConeMat, Q, i);
+    #Se definen los grados de libertad asociados al elemento
+    dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4]]
+    n_dofs=size(dofs,2)
 
-    dof1=ConeMat[i,2];
-    dof2=ConeMat[i,3];
-    dof3=ConeMat[i,4];
-
-    Kglo[dof1,dof1] += Kele[1,1];
-    Kglo[dof1,dof2] += Kele[1,2];
-    Kglo[dof1,dof3] += Kele[1,3];
-    
-    Kglo[dof2,dof1] += Kele[2,1];
-    Kglo[dof2,dof2] += Kele[2,2];
-    Kglo[dof2,dof3] += Kele[2,3];
-
-    Kglo[dof3,dof1] += Kele[3,1];
-    Kglo[dof3,dof2] += Kele[3,2];
-    Kglo[dof3,dof3] += Kele[3,3];
-
-    Fglo[dof1]+= Fele[1];
-    Fglo[dof2]+= Fele[2];
-    Fglo[dof3]+= Fele[3];
-
+    #Se realiza el aporte elemental a las matrices globales
+    for j in 1:n_dofs
+        for k in 1:n_dofs
+            Kglo[dofs[j],dofs[k]] += Kele[j,k];
+        end
+        Fglo[dofs[j]]+= Fele[j];
+    end
 end
 
 ## Se aplican las condiciones de frontera de Dirichlet 
 # En la matriz de condiciones de frontera la etiqueta 1 de la segunda columna indica que es dirichlet
 
-#Por el mètodo de pènalizaciòn
+#Constante de pènalizaciòn
 kappa=1e7;
-
-for i= 1 : size(BounCond,1)
-
-    #Se identifica si un elemento de borde el de condiciòn Dirichlet
-    Dirichlet=BounCond[i,2];
-
-    #Etiqueta del elemento
-    Elemento=i;
-
-    if Dirichlet == 1
-
-        #Se identifican los nodos que forman el elemento de borde
-        dof1= BounCond[Elemento, 3];
-        dof2= BounCond[Elemento, 4];
-
-        #Se agrega el factor de penalizaciòn en los elementos correspondientes de la matriz de rigidez global
-        Kglo[dof1, dof1]+= kappa;
-        Kglo[dof2, dof2]+= kappa;
-
-        #Se agrega el factor de penalizaciòn en los elementos correspondientes al vector de cargas
-        Fglo[dof1]+= BounDir*kappa;
-        Fglo[dof2]+= BounDir*kappa;
-
-    else i==2
-
-        #Se identifican los nodos que forman el elemento de borde
-        dof1= BounCond[Elemento, 3]
-        dof2= BounCond[Elemento, 4]
-        
-        #Se ubican las coordenadas de los nodos que forman parte de la frontera de Neumann
-        Ni= [NodalMesh[dof1,2],NodalMesh[dof1,3]];
-        Nj= [NodalMesh[dof2,2],NodalMesh[dof2,3]];
-        
-        #Se encuentra la distancia
-        l=sqrt((Ni[1]-Nj[1])^2+(Ni[2]-Nj[2])^2);
+n_faces=size(BounCond,1)
+#Se hace un recorrido por cada una de las caras externas de la malla 
+for i in 1:n_faces
+    #Se define el grupo fisico al que pertenece la cara
+    phys_grp=BounCond[i,2];
+    #Se identifica el tipo de condición de borde correspondiente a ese borde físico
+    BC_type=BC[phys_grp,1];
+    #Se identifica el valor de la condición de borde
+    BC_value=BC[phys_grp,2];
+    
+    #Se definen los nodos asociados a la i-esima cara
+    nod1=BounCond[i,3]
+    nod2=BounCond[i,4]
+    #Se definen los grados de libertad asociados a la i-esima cara
+    dofs=[nod1 nod2]
+    n_dofs=size(dofs,2)
+    
+    if BC_type == 0 #Si se trata de una condición de Dirichlet
+        #Se penalizan los grados de libertad asociados a la cara 
+        for j in 1:n_dofs
+           Kglo[dofs[j], dofs[j]]+= kappa;
+           Fglo[dofs[j]]+= BC_value*kappa;
+        end
+    else 
+       #Se ubican las coordenadas de los nodos que forman parte de la cara
+        x= [NodalMesh[nod1,2],NodalMesh[nod2,2]];
+        y= [NodalMesh[nod1,3],NodalMesh[nod2,3]];
+        #Se calcula la longitud de la cara
+        l=sqrt((x[1]-x[2])^2+(y[1]-y[2])^2);
 
         #Se agrega al vector de cargas
-        Fglo[dof1]+= 0.5*qn*l; 
-        Fglo[dof2]+= 0.5*qn*l; 
-        
+        for j in 1:n_dofs
+           Fglo[dofs[j]]+= 0.5*BC_value*l; 
+        end
     end
 
 end 
 
 # Una vez acoplado el sistema, se procede a resolver. 
 
-T= Kglo \ Fglo;
+T= Kglo\Fglo;
+#T= lu(Kglo) \ Fglo;  #Usando descomposición LU
+#T= qr(Kglo) \ Fglo;  #Usando descomposición QR
 
-
-#Se escribe los resultados en un archivo vtk
-
-file=open("/home/cfmoraless/Codigos/PoissonEquationPlate/Temperatures.vtk", "w")
-
-write(file, "# vtk DataFile Version 3.0 \n")  #esta linea es la version del archivo y el identificador
-write(file, "Unstructured Grid \n")  #esta linea es la version del archivo y el identificador
-write(file, "ASCII \n")  #esta linea es la version del archivo y el identificador
-write(file, "DATASET UNSTRUCTURED_GRID\n")  #esta linea indica que tipo de estrucutra se incluira. Mallas no estrucutradas para este caso
-
-write(file, "POINTS $Nnodos float \n")  #esta linea inicia indicando los puntos, numero de nodos y el tipo (float, integre)
-
-#A continuaciòn se escriben las coordendas nodales 
-for i = 1:Nnodos
-    Nodx=  NodalMesh[i,2];
-    Nody=  NodalMesh[i,3];
-    Nodz=  NodalMesh[i,4];
-    write(file, "$Nodx $Nody $Nodz  \n");
-end
-
-#Ahora se escribe el conjunto de dataset, en este caso mallas no estructuradas
-# su estrucutra es CELLS n size (n= cantidad de elementos, size=tamaño de vertices requeridos)
-#Por cada elemento se requieren tres vertices.
-S=Nelem*4;
-write(file, "CELLS $Nelem $S \n")  #esta linea inicia indicando los puntos, numero de nodos y el tipo (float, integre)
-
-#Ahora se escribe la lista de las celdas con el siguiente orden NumeroPuntos, i,j,k,l,...
-
-for i=1:Nelem
-   l= ConeMat[i,2]-1;
-   m= ConeMat[i,3]-1;
-   n= ConeMat[i,4]-1;
-
-    write(file, "3 $l $m $n \n")  #Siempre va 3 por que son elementos triangulares
-end
-
-##Seguido se debe escribir el tipo de celda a la que le corresponde cada elemento. EN este caso es 5 para cada celda
-write(file, "CELL_TYPES $Nelem \n")
-
-for i=1:Nelem
-
-     write(file, "5  \n")  #Siempre va 3 por que son elementos triangulares
- end
-
- write(file, "POINT_DATA $Nnodos \n")
- write(file, "SCALARS T float \n")
- write(file, "LOOKUP_TABLE default \n")
-
- for i = 1:Nnodos
-    Tem=  T[i]
-
-    write(file, "$Tem \n");
-end
-
-close(file);
+writeVTK(file_name_output,T,["fi"])
 
 
 

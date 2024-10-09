@@ -77,7 +77,7 @@ ElementModi=[];
 
 #Este ciclo for lee linea por linea, en cada ciclo la linea toma el valor de A y por medio de findfirst encuentra el primer vacio de la cadena
 #luego se agrega al vector ElementModi con la funciòn push! donde el valor a agregar es el indice encontrado por findfirst +1 hasta el final
-for i in 1: length(ElementText)
+for i in 1:length(ElementText)
     A=ElementText[i]
     IdEmpty=findfirst(isspace,A)
     push!(ElementModi,A[IdEmpty+1:end])
