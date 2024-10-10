@@ -1,16 +1,16 @@
-function MeshGen(Mesh, plotmesh)
+function MeshGen(mesh_file, plotmesh)
 
 #using Plots
 
 #se abre el archivo que contiene la informacion de la malla
  
-MeshInf= readlines(Mesh)
-close(Mesh)
+MeshInf= readlines(mesh_file)
+close(mesh_file)
 
 MeshNodes=[]; #Identificador del inicio y final de las coordendas nodales
 MeshElem=[]; #Identificador del inicio y final de de matriz de conexiones elemental
 
-for (Linea, Info) in enumerate(MeshInf) #En este caso numerate toma un arreglo y devuelve una pareja (indice, valor) del archivo MeshInf con la pareja (indice, valor) se hace ina iteraciòn en el ciclo for donde Linea en es indice del archivo y Info recibe el contenido de la linea
+for (Linea, Info) in enumerate(MeshInf) #En este caso numerate toma un arreglo y devuelve una pareja (indice, valor) del archivo MeshInf con la pareja (indice, valor) se hace una iteraciòn en el ciclo for donde Linea en es indice del archivo y Info recibe el contenido de la linea
 
 #Linea por linea del archivo MeshInf Se empezara a buscar donde inicia la coordenadas de los nodos, cuantos nodos hay y donde termina
 
@@ -34,7 +34,6 @@ end
 
 #Se construye una variable que contenga la informacion unicamente de las coordenadas de la malla
 NodalText=[]
-
 for i in MeshNodes[1]+2: MeshNodes[2]-1
     push!(NodalText,MeshInf[i]);
 end
@@ -49,7 +48,7 @@ function safe_parse(value::String)
     try
         return parse(Int, value)
     catch
-        return parse(Float64, value)
+        return parse(Float32, value)
     end
 end 
 
@@ -68,7 +67,7 @@ NumElem= parse(Int,MeshInf[MeshElem[1]+1]);
 ElementText=[]
 
 #Se agrega la informacion de todos los elementos en el siguiente ciclo for
-for i in MeshElem[1]+2: MeshElem[2]-1
+for i in MeshElem[1]+2:MeshElem[2]-1
     push!(ElementText,MeshInf[i]);
 end
 
@@ -104,14 +103,32 @@ ConeMat=vcat([parse.(Int,(split(line))) for line in EleMatrix]'...) ;
 BounCond=BounCond[:,[1,3,5,6]];
 ConeMat=ConeMat[:,[1,5,6,7]];
 
-#Se enumeran los elementos del dominio ubicandolos en la columna 1
-for i in 1: size(ConeMat,1)
-    ConeMat[i,1]= i;
+#Se define la cantidad de nodos en función del tipo de elemento
+Nelem= size(ConeMat,1)
+for i in 1:Nelem
+   if ConeMat[i,1]==2  #Triangulo lineal de 3 nodos
+    ConeMat[i,1]= 3;
+   elseif ConeMat[i,1]==3  #Cuadrilátero bilineal de 4 nodos 
+    ConeMat[i,1]= 4;
+   elseif ConeMat[i,1]==9   #Triangulo segundo orden de 6 nodos
+    ConeMat[i,1]= 6; 
+   elseif ConeMat[i,1]==10  #Cuadrilátero segundo orden de 9 nodos  
+    ConeMat[i,1]= 9;  
+   elseif ConeMat[i,1]==16  #Cuadrilátero segundo orden incompleto de 8 nodos  
+    ConeMat[i,1]= 8;  
+   end
 end
 
 #Se enumeran los elementos de la frontera ubicandolos en la columna 1
-for i in 1: size(BounCond,1)
-    BounCond[i,1]= i;
+Nfaces= size(BounCond,1)
+for i in 1: Nfaces
+   if BounCond[i,1]==1
+    BounCond[i,1]= 2;  #Elemento línea de dos nodos
+   elseif BounCond[i,1]==8
+    BounCond[i,1]= 3;  #Elemento línea de segundo orden de tres nodos 
+   elseif BounCond[i,1]==26
+    BounCond[i,1]= 4;  #Elemento línea de tercer orden de cuatro nodos 
+   end
 end
 
 #SE CONSTRUYEN LA MALLA GENERADA
@@ -136,8 +153,7 @@ else
 end
 #savefig("/home/cfmoraless/Codigos/PoissonEquationPlate/malla.png")
 
-Nelem= ConeMat[end,1]
-return Nnodos, NodalMesh, Nelem, ConeMat, BounCond;
+return Nnodos, NodalMesh, Nelem, ConeMat, Nfaces, BounCond;
 
 
 end

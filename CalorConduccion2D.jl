@@ -23,13 +23,16 @@ using Plots
 using DelimitedFiles
 using SparseArrays, LinearAlgebra
 include("MeshGenerator0rder_1.jl")  #Funcion para importar la mall
-include("K_diff.jl")    #Funciòn para evaluar la matriz de rigidez elemental
-include("LoadElemental.jl")         #Funciòn para evaluar el vector de cargas elemental
 include("N_dN.jl")                  #Funciòn 
 include("Jacobian.jl")              #Funciòn 
 include("grad_N.jl")                #Funciòn 
 include("k_lm.jl")                  #Funciòn 
-include("Write_VTK.jl")                  #Funciòn 
+include("K_diff.jl")    #Funciòn para evaluar la matriz de rigidez elemental
+include("F_l.jl")         #Funciòn para evaluar el vector de cargas elemental
+include("F.jl")         #Funciòn para evaluar el vector de cargas elemental
+include("Write_VTK.jl")             #Funciòn 
+include("source_fcn.jl")            #Funciòn 
+include("nodal_coord.jl")            #Funciòn 
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 
@@ -38,9 +41,10 @@ file_name="Plate"
 file_name_mesh=file_name*".msh"
 file_name_output=file_name*".vtk"
 
+nq=3;            #Número de puntos de cuadratura a usar en la integración numérica
 coef_k=1.0;    #Coeficiente del término difusivo
 Q= 0.0;        # generaciòn de calor
-BC=[0 20; 1 50; 0 100; 1 0]    #Se define una matriz con las condiciones de contorno del problema. Cada fila
+BC=[0 20; 1 100; 0 100; 1 0]    #Se define una matriz con las condiciones de contorno del problema. Cada fila
                         #se refiere a una de los bordes físicos del problema. El valor en la primera columna
                         #define el tipo de condición de borde: 0:Dirichlet 1:Neumann
 
@@ -56,8 +60,7 @@ mesh_file=open(file_name_mesh);
 #Numero de elementos=NumElem,
 #Matriz de conectividade=ConeMat
 
-
-Nnodos, NodalMesh, Nelem, ConeMat, BounCond= MeshGen(mesh_file, plotmesh_flag);
+Nnodos, NodalMesh, Nelem, ConeMat, Nfaces, BounCond= MeshGen(mesh_file, plotmesh_flag);
 #writedlm("output.txt", BounCond)
 
 #Se crea una matriz de rigidez global y el vector de cargas global
@@ -65,8 +68,8 @@ Kglo=spzeros(Nnodos, Nnodos);  #La matriz de rigidez se inicializa como una matr
 Fglo=zeros(Nnodos, 1);
 
 for i in 1:Nelem
-    Kele= K_diff(NodalMesh, ConeMat, i, coef_k)
-    Fele=LoadElemental(NodalMesh, ConeMat, Q, i);
+    Kele= K_diff(NodalMesh, ConeMat, i, coef_k, nq)
+    Fele=F(NodalMesh, ConeMat,i,nq);
     #Se definen los grados de libertad asociados al elemento
     dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4]]
     n_dofs=size(dofs,2)
@@ -85,9 +88,8 @@ end
 
 #Constante de pènalizaciòn
 kappa=1e7;
-n_faces=size(BounCond,1)
 #Se hace un recorrido por cada una de las caras externas de la malla 
-for i in 1:n_faces
+for i in 1:Nfaces
     #Se define el grupo fisico al que pertenece la cara
     phys_grp=BounCond[i,2];
     #Se identifica el tipo de condición de borde correspondiente a ese borde físico

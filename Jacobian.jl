@@ -1,31 +1,28 @@
 function Jacobian(chi,eta,e,ConeMat,NodalMesh)
- #Se definen los nodos del elemento
-  nod1=ConeMat[e,2]  
-  nod2=ConeMat[e,3]
-  nod3=ConeMat[e,4]
- #Se definen las coordenadas de cada uno de los nodos del elemento
-  x1=NodalMesh[nod1,2]
-  y1=NodalMesh[nod1,3]
-
-  x2=NodalMesh[nod2,2]
-  y2=NodalMesh[nod2,3]
-
-  x3=NodalMesh[nod3,2]
-  y3=NodalMesh[nod3,3]
+x,y = nodal_coord(e,ConeMat,NodalMesh)
+n_nod=size(x,2)
 #Se definen las derivadas de las funciones base
-  _,dN1_dchi,dN1_deta=N_dN(chi,eta,1)
-  _,dN2_dchi,dN2_deta=N_dN(chi,eta,2)
-  _,dN3_dchi,dN3_deta=N_dN(chi,eta,3)
+dN_dchi=zeros(1,n_nod)
+dN_deta=zeros(1,n_nod)
+for i in 1:n_nod
+    _,dN_dchi[1,i],dN_deta[1,i]=N_dN(chi,eta,i)
+end
+
 #Se calculan los términos de la matriz Jacobiana   
-  dx_dchi = x1*dN1_dchi + x2*dN2_dchi + x3*dN3_dchi 
-  dx_deta = x1*dN1_deta + x2*dN2_deta + x3*dN3_deta 
+dx_dchi=0.0
+dx_deta =0.0
+dy_dchi=0.0
+dy_deta =0.0
+for i in 1:n_nod
+  dx_dchi += x[1,i]*dN_dchi[1,i] 
+  dx_deta += x[1,i]*dN_deta[1,i]
+  dy_dchi += y[1,i]*dN_dchi[1,i]
+  dy_deta += y[1,i]*dN_deta[1,i]
+end
 
-  dy_dchi = y1*dN1_dchi + y2*dN2_dchi + y3*dN3_dchi 
-  dy_deta = y1*dN1_deta + y2*dN2_deta + y3*dN3_deta 
+J=[dx_dchi dy_dchi; dx_deta dy_deta]
+detJ=dx_dchi* dy_deta-dy_dchi*dx_deta
+return J,detJ
 
-  J=[dx_dchi dy_dchi; dx_deta dy_deta]
-  detJ=dx_dchi* dy_deta-dy_dchi*dx_deta
-
-  return J,detJ
 end
   
