@@ -74,133 +74,146 @@ ConeMat=[]
 #Se hace un recorrido por todo el listado ElementModi para extraer la información de los elementos y caras externas
 #Los tipos de elementos en formato MSH se encuentran listados en https://gitlab.onelab.info/gmsh/gmsh/blob/master/src/common/GmshDefines.h
 for line in ElementModi
-  TypeElem= line[1]
-  if parse(Int,TypeElem)==1       #Elemento línea de 2 nodos
-    n_nods=2
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp=[temp[3]; temp[lv-n_nods+1:lv]]
-    temp=insert!(temp,1,n_nods)
-    temp=transpose(temp)
-    push!(BounCond,temp)
-  elseif parse(Int,TypeElem)==8   #Elemento línea de 3 nodos
-    n_nods=3
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp=[temp[3]; temp[lv-n_nods+1:lv]]
-    temp=insert!(temp,1,n_nods)
-    temp=transpose(temp)
-    push!(BounCond,temp)
-  elseif parse(Int,TypeElem)==26   #Elemento línea de 4 nodos
-    n_nods=4
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp=[temp[3]; temp[lv-n_nods+1:lv]]
-    temp=insert!(temp,1,n_nods)
-    temp=transpose(temp)
-    push!(BounCond,temp)
-  elseif parse(Int,TypeElem)==27   #Elemento línea de 5 nodos
-    n_nods=5
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp=[temp[3]; temp[lv-n_nods+1:lv]]
-    temp=insert!(temp,1,n_nods)
-    temp=transpose(temp)
-    push!(BounCond,temp)        
-  elseif parse(Int,TypeElem)==28   #Elemento línea de 6 nodos
-    n_nods=6
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp=[temp[3]; temp[lv-n_nods+1:lv]]
-    temp=insert!(temp,1,n_nods)
-    temp=transpose(temp)
-    push!(BounCond,temp)      
-  elseif parse(Int,TypeElem)==2    #Elemento triangular de 3 nodos
-    n_nods=3
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    temp1=transpose(temp1)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==9    #Elemento triangular de 6 nodos
-    n_nods=6
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==20   #Elemento triangular de 9 nodos
-    n_nods=9
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==21   #Elemento triangular de 10 nodos
-    n_nods=10
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==22   #Elemento triangular de 12 nodos
-    n_nods=12
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==3    #Elemento Cuadrilátero de 4 nodos
-    n_nods=4
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==10   #Elemento Cuadrilátero de 9 nodos
-    n_nods=9
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==16   #Elemento Cuadrilátero de 8 nodos
-    n_nods=8
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==36   #Elemento Cuadrilátero de 16 nodos
-    n_nods=16
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1);   
-  elseif parse(Int,TypeElem)==37   #Elemento Cuadrilátero de 25 nodos
-    n_nods=25
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==38   #Elemento Cuadrilátero de 36 nodos
-    n_nods=36
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==39   #Elemento Cuadrilátero de 12 nodos (incompleto)
-    n_nods=12
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==40   #Elemento Cuadrilátero de 16 nodos (incompleto)
-    n_nods=16
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1); 
-  elseif parse(Int,TypeElem)==41   #Elemento Cuadrilátero de 20 nodos (incompleto) 
-    n_nods=20
-    temp=parse.(Int,(split(line))) 
-    lv=size(temp,1)
-    temp1=insert!(temp[lv-n_nods+1:lv],1,n_nods)
-    push!(ConeMat,temp1);                                   
-  end
+    TypeElem= line[1]
+    if parse(Int,TypeElem)==1       #Elemento línea de 2 nodos
+      n_nods=2
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=[temp[3]; temp[lv-n_nods+1:lv]]
+      temp=insert!(temp,1,n_nods)
+      temp=transpose(temp)
+      push!(BounCond,temp)
+    elseif parse(Int,TypeElem)==8   #Elemento línea de 3 nodos
+      n_nods=3
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=[temp[3]; temp[lv-n_nods+1:lv]]
+      temp=insert!(temp,1,n_nods)
+      temp=transpose(temp)
+      push!(BounCond,temp)
+    elseif parse(Int,TypeElem)==26   #Elemento línea de 4 nodos
+      n_nods=4
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=[temp[3]; temp[lv-n_nods+1:lv]]
+      temp=insert!(temp,1,n_nods)
+      temp=transpose(temp)
+      push!(BounCond,temp)
+    elseif parse(Int,TypeElem)==27   #Elemento línea de 5 nodos
+      n_nods=5
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=[temp[3]; temp[lv-n_nods+1:lv]]
+      temp=insert!(temp,1,n_nods)
+      temp=transpose(temp)
+      push!(BounCond,temp)        
+    elseif parse(Int,TypeElem)==28   #Elemento línea de 6 nodos
+      n_nods=6
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=[temp[3]; temp[lv-n_nods+1:lv]]
+      temp=insert!(temp,1,n_nods)
+      temp=transpose(temp)
+      push!(BounCond,temp)      
+    elseif parse(Int,TypeElem)==2    #Elemento triangular de 3 nodos
+      n_nods=3
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==9    #Elemento triangular de 6 nodos
+      n_nods=6
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==20   #Elemento triangular de 9 nodos
+      n_nods=9
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp);  
+    elseif parse(Int,TypeElem)==21   #Elemento triangular de 10 nodos
+      n_nods=10
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==22   #Elemento triangular de 12 nodos
+      n_nods=12
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==3    #Elemento Cuadrilátero de 4 nodos
+      n_nods=4
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==10   #Elemento Cuadrilátero de 9 nodos
+      n_nods=9
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==16   #Elemento Cuadrilátero de 8 nodos
+      n_nods=8
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==36   #Elemento Cuadrilátero de 16 nodos
+      n_nods=16
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp);    
+    elseif parse(Int,TypeElem)==37   #Elemento Cuadrilátero de 25 nodos
+      n_nods=25
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==38   #Elemento Cuadrilátero de 36 nodos
+      n_nods=36
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==39   #Elemento Cuadrilátero de 12 nodos (incompleto)
+      n_nods=12
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==40   #Elemento Cuadrilátero de 16 nodos (incompleto)
+      n_nods=16
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp); 
+    elseif parse(Int,TypeElem)==41   #Elemento Cuadrilátero de 20 nodos (incompleto) 
+      n_nods=20
+      temp=parse.(Int,(split(line))) 
+      lv=size(temp,1)
+      temp=insert!(temp[lv-n_nods+1:lv],1,n_nods)
+      temp=transpose(temp)
+      push!(ConeMat,temp);                                   
+    end
 end 
 #Se convierte el arreglo de vectores en una matriz
 BounCond=vcat(BounCond...)

@@ -1,4 +1,4 @@
-function K(NodalMesh, ConeMat, e, nq)
+function K(NodalMesh, ConeMat,e,nq)
  n_nod=ConeMat[e,1] #Número de nodos del elemento
  Kelem=zeros(n_nod,n_nod)
  for l in 1:n_nod

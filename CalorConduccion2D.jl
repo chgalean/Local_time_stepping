@@ -27,7 +27,7 @@ include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advec
 #PARAMETROS RELACIONADOS AL MODELO
 
 plotmesh_flag=0;  #1 para graficar la malla generada
-file_name="Plate"
+file_name="Plate_TRIANG3"
 file_name_mesh=file_name*".msh"
 file_name_output=file_name*".vtk"
 
@@ -47,12 +47,11 @@ Kglo=spzeros(Nnodos, Nnodos);  #La matriz de rigidez se inicializa como una matr
 Fglo=zeros(Nnodos, 1);
 
 for i in 1:Nelem
-    Kele= K(NodalMesh, ConeMat, i, coef_k, nq)
+    Kele= K(NodalMesh, ConeMat,i,nq)
     Fele=F(NodalMesh, ConeMat,i,nq);
     #Se definen los grados de libertad asociados al elemento
     dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4]]
     n_dofs=size(dofs,2)
-
     #Se realiza el aporte elemental a las matrices globales
     for j in 1:n_dofs
         for k in 1:n_dofs
