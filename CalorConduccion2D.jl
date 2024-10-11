@@ -27,7 +27,7 @@ include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advec
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 plotmesh_flag=0;  #1 para graficar la malla generada
-file_name="Plate_TRIANG3"
+file_name="Plate_TRIANG3_fine"
 file_name_mesh=file_name*".msh"
 file_name_output=file_name*".vtk"
 
@@ -40,8 +40,7 @@ BC=[0 1;0 0; 0 0; 0 0]  #Se define una matriz con las condiciones de contorno de
 #DISCRETIZACION ESPACIAL
 #Se lee el archivo en formato MSH2 que contiene la malla
 mesh_file=open(file_name_mesh);
-Nnodos, NodalMesh, Nelem, ConeMat, Nfaces, BounCond = mesh_import_MSH2(mesh_file, plotmesh_flag);
-
+Nnodos,NodalMesh,Nelem,ConeMat,Nfaces,BounCond,TypeElem = mesh_import_MSH2(mesh_file, plotmesh_flag);
 #Se crea una matriz de rigidez global y el vector de cargas global
 Kglo=spzeros(Nnodos, Nnodos);  #La matriz de rigidez se inicializa como una matriz tipo sparse
 Fglo=zeros(Nnodos, 1);
@@ -104,7 +103,7 @@ T= Kglo\Fglo;
 #T= qr(Kglo) \ Fglo;  #Usando descomposición QR
 
 #Se escribe el archivo de salida
-writeVTK(file_name_output,T,["fi"])
+writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,T,["fi"])
 
 
 
