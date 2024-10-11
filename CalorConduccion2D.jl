@@ -17,7 +17,9 @@ include("grad_N.jl")            #Funciòn para calcular el gradiente de una func
 include("Gauss_qpoints.jl")     #Funciòn para definir los puntos y pesos de la cuadratura de Gauss
 include("klm_diff.jl")          #Funciòn para calcuar el componente difusivo de la matriz de rigidez elemental
 include("klm_adv.jl")           #Funciòn para calcuar el componente advectivo de la matriz de rigidez elemental
+include("Mlm.jl")               #Funciòn para calcuar la matriz capacitiva elemental
 include("K.jl")                 #Funciòn para evaluar la matriz de rigidez global
+include("M.jl")                 #Funciòn para evaluar la matriz capacitiva global
 include("F_l.jl")               #Funciòn para evaluar el vector de cargas elemental
 include("F.jl")                 #Funciòn para evaluar el vector de cargas global
 include("write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
@@ -43,11 +45,13 @@ mesh_file=open(file_name_mesh);
 Nnodos,NodalMesh,Nelem,ConeMat,Nfaces,BounCond,TypeElem = mesh_import_MSH2(mesh_file, plotmesh_flag);
 #Se crea una matriz de rigidez global y el vector de cargas global
 Kglo=spzeros(Nnodos, Nnodos);  #La matriz de rigidez se inicializa como una matriz tipo sparse
+Mglo=spzeros(Nnodos, Nnodos);  #La matriz capacitiva se inicializa como una matriz tipo sparse
 Fglo=zeros(Nnodos, 1);
-
+#Se hace un recorrido por los elementos para realizar en ensamble de las matrices y vectores globales
 for i in 1:Nelem
-    Kele= K(NodalMesh, ConeMat,i,nq)
-    Fele=F(NodalMesh, ConeMat,i,nq);
+    Kele=K(NodalMesh,ConeMat,i,nq)
+    Mele=M(NodalMesh,ConeMat,i,nq)
+    Fele=F(NodalMesh,ConeMat,i,nq);
     #Se definen los grados de libertad asociados al elemento
     dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4]]
     n_dofs=size(dofs,2)
@@ -55,11 +59,11 @@ for i in 1:Nelem
     for j in 1:n_dofs
         for k in 1:n_dofs
             Kglo[dofs[j],dofs[k]] += Kele[j,k];
+            Mglo[dofs[j],dofs[k]] += Mele[j,k];
         end
         Fglo[dofs[j]]+= Fele[j];
     end
 end
-
 # Se aplican las condiciones de frontera  
 # En la matriz de condiciones de frontera la etiqueta 1 de la segunda columna indica que es dirichlet
 #Constante de pènalizaciòn
