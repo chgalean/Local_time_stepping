@@ -22,12 +22,11 @@ include("F.jl")                 #Funciòn para evaluar el vector de cargas globa
 include("Write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
 include("diff_fcn.jl")          #Funciòn que define el coeficiente de difusión k 
 include("source_fcn.jl")        #Funciòn que define el término fuente Q 
-#include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advectivo 
+include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advectivo 
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
-
 plotmesh_flag=0;  #1 para graficar la malla generada
-file_name="Plate"
+file_name="Plate_QUAD4"
 file_name_mesh=file_name*".msh"
 file_name_output=file_name*".vtk"
 
