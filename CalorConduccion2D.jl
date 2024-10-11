@@ -14,18 +14,18 @@ include("nodal_coord.jl")       #Funciòn para determinar las coordenadas nodale
 include("N_dN.jl")              #Funciòn para calcular las funciones base y sus derivadas 
 include("Jacobian.jl")          #Funciòn para calcular el Jacobiano 
 include("grad_N.jl")            #Funciòn para calcular el gradiente de una función base 
+include("Gauss_qpoints.jl")     #Funciòn para definir los puntos y pesos de la cuadratura de Gauss
 include("klm_diff.jl")          #Funciòn para calcuar el componente difusivo de la matriz de rigidez elemental
 include("klm_adv.jl")           #Funciòn para calcuar el componente advectivo de la matriz de rigidez elemental
 include("K.jl")                 #Funciòn para evaluar la matriz de rigidez global
 include("F_l.jl")               #Funciòn para evaluar el vector de cargas elemental
 include("F.jl")                 #Funciòn para evaluar el vector de cargas global
-include("Write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
+include("write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
 include("diff_fcn.jl")          #Funciòn que define el coeficiente de difusión k 
 include("source_fcn.jl")        #Funciòn que define el término fuente Q 
 include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advectivo 
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
-
 plotmesh_flag=0;  #1 para graficar la malla generada
 file_name="Plate_TRIANG3"
 file_name_mesh=file_name*".msh"
