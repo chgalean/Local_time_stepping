@@ -22,7 +22,7 @@ include("F.jl")                 #Funciòn para evaluar el vector de cargas globa
 include("Write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
 include("diff_fcn.jl")          #Funciòn que define el coeficiente de difusión k 
 include("source_fcn.jl")        #Funciòn que define el término fuente Q 
-include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advectivo 
+#include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advectivo 
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 
@@ -47,8 +47,8 @@ Kglo=spzeros(Nnodos, Nnodos);  #La matriz de rigidez se inicializa como una matr
 Fglo=zeros(Nnodos, 1);
 
 for i in 1:Nelem
-    Kele= K(NodalMesh, ConeMat, i, coef_k, nq)
-    Fele=F(NodalMesh, ConeMat,i,nq);
+    Kele= K(NodalMesh,ConeMat,i,nq)
+    Fele=F(NodalMesh,ConeMat,i,nq);
     #Se definen los grados de libertad asociados al elemento
     dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4]]
     n_dofs=size(dofs,2)
