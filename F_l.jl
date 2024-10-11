@@ -14,7 +14,8 @@ function F_l(l,e,ConeMat,NodalMesh,nq)
     end
     #Se toman las coordenadas nodales  
     x,y = nodal_coord(e,ConeMat,NodalMesh)
-    n_nod=size(x,2)
+    #Se determina el número de nodos en ese elemento
+    n_nod=ConeMat[e,1]
     fl=0.0
     for i in 1:nq
         x_coord=0.0

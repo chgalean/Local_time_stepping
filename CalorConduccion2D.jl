@@ -1,74 +1,53 @@
-#Este codigo soluciona la ecuaciòn de calor dada por
+#Este codigo soluciona la ecuaciòn de difusión-advección
 
-#       ∇̇(∇ϕ)= Q     
+#       ∇̇.(-k∇ϕ)+v.∇ϕ= Q     
 
 # por el mètodo de elementos fìnitos utilizando un espacio de elementos triangulares.
-# El dominio discretizado corresponde a una placa con geometrìa rectangular
-#
-#               \phi=100
-#           ________________
-#          |                |
-#          |                |
-#    qn=0  |                | \phi=20
-#          |                |
-#          |                |
-#          |________________|
-#                 qn=0
-#
 # Autor: Cristian Felipe Morales Suàrez
 #########################################################################################
 #ESPACIO PARA EL LLAMADO DE FUNCIONES Y PAQUETES REQUERIDOS PARA LA SOLUCIÒN DEL SISTEMA
-
 using Plots
 using DelimitedFiles
 using SparseArrays, LinearAlgebra
-include("MeshGenerator0rder_1.jl")  #Funcion para importar la mall
-include("N_dN.jl")                  #Funciòn 
-include("Jacobian.jl")              #Funciòn 
-include("grad_N.jl")                #Funciòn 
-include("k_lm.jl")                  #Funciòn 
-include("K_diff.jl")    #Funciòn para evaluar la matriz de rigidez elemental
-include("F_l.jl")         #Funciòn para evaluar el vector de cargas elemental
-include("F.jl")         #Funciòn para evaluar el vector de cargas elemental
-include("Write_VTK.jl")             #Funciòn 
-include("source_fcn.jl")            #Funciòn 
-include("nodal_coord.jl")            #Funciòn 
+include("mesh_import_MSH2.jl")  #Funcion para importar la malla en formato MSH2
+include("nodal_coord.jl")       #Funciòn para determinar las coordenadas nodales de un elemento 
+include("N_dN.jl")              #Funciòn para calcular las funciones base y sus derivadas 
+include("Jacobian.jl")          #Funciòn para calcular el Jacobiano 
+include("grad_N.jl")            #Funciòn para calcular el gradiente de una función base 
+include("klm_diff.jl")          #Funciòn para calcuar el componente difusivo de la matriz de rigidez elemental
+include("klm_adv.jl")           #Funciòn para calcuar el componente advectivo de la matriz de rigidez elemental
+include("K.jl")                 #Funciòn para evaluar la matriz de rigidez global
+include("F_l.jl")               #Funciòn para evaluar el vector de cargas elemental
+include("F.jl")                 #Funciòn para evaluar el vector de cargas global
+include("Write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
+include("source_fcn.jl")        #Funciòn que define el término fuente Q 
+include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advectivo 
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 
-plotmesh_flag=1;  #1 para graficar la malla generada
+plotmesh_flag=0;  #1 para graficar la malla generada
 file_name="Plate"
 file_name_mesh=file_name*".msh"
 file_name_output=file_name*".vtk"
 
 nq=3;            #Número de puntos de cuadratura a usar en la integración numérica
-coef_k=1.0;    #Coeficiente del término difusivo
-Q= 0.0;        # generaciòn de calor
-BC=[0 20; 1 100; 0 100; 1 0]    #Se define una matriz con las condiciones de contorno del problema. Cada fila
+coef_k=0.005;  #Coeficiente del término difusivo
+BC=[0 1;0 0; 0 0; 0 0]  #Se define una matriz con las condiciones de contorno del problema. Cada fila
                         #se refiere a una de los bordes físicos del problema. El valor en la primera columna
                         #define el tipo de condición de borde: 0:Dirichlet 1:Neumann
 
 #######################################################################################
 #DISCRETIZACION ESPACIAL
-
-#Mesh es la lectura del archivo .txt que contiene la informaciòn de la malla
+#Se lee el archivo en formato MSH2 que contiene la malla
 mesh_file=open(file_name_mesh);
-
-#Esta funciòn entrega como return entrega:
-#Numeros de nodos = Nnodos, 
-#Matriz nodal=NodalMesh, 
-#Numero de elementos=NumElem,
-#Matriz de conectividade=ConeMat
-
-Nnodos, NodalMesh, Nelem, ConeMat, Nfaces, BounCond= MeshGen(mesh_file, plotmesh_flag);
-#writedlm("output.txt", BounCond)
+Nnodos, NodalMesh, Nelem, ConeMat, Nfaces, BounCond = mesh_import_MSH2(mesh_file, plotmesh_flag);
 
 #Se crea una matriz de rigidez global y el vector de cargas global
 Kglo=spzeros(Nnodos, Nnodos);  #La matriz de rigidez se inicializa como una matriz tipo sparse
 Fglo=zeros(Nnodos, 1);
 
 for i in 1:Nelem
-    Kele= K_diff(NodalMesh, ConeMat, i, coef_k, nq)
+    Kele= K(NodalMesh, ConeMat, i, coef_k, nq)
     Fele=F(NodalMesh, ConeMat,i,nq);
     #Se definen los grados de libertad asociados al elemento
     dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4]]
@@ -83,11 +62,10 @@ for i in 1:Nelem
     end
 end
 
-## Se aplican las condiciones de frontera de Dirichlet 
+# Se aplican las condiciones de frontera  
 # En la matriz de condiciones de frontera la etiqueta 1 de la segunda columna indica que es dirichlet
-
 #Constante de pènalizaciòn
-kappa=1e7;
+kappa=1e8;
 #Se hace un recorrido por cada una de las caras externas de la malla 
 for i in 1:Nfaces
     #Se define el grupo fisico al que pertenece la cara
@@ -96,14 +74,12 @@ for i in 1:Nfaces
     BC_type=BC[phys_grp,1];
     #Se identifica el valor de la condición de borde
     BC_value=BC[phys_grp,2];
-    
     #Se definen los nodos asociados a la i-esima cara
     nod1=BounCond[i,3]
     nod2=BounCond[i,4]
     #Se definen los grados de libertad asociados a la i-esima cara
     dofs=[nod1 nod2]
     n_dofs=size(dofs,2)
-    
     if BC_type == 0 #Si se trata de una condición de Dirichlet
         #Se penalizan los grados de libertad asociados a la cara 
         for j in 1:n_dofs
@@ -116,21 +92,19 @@ for i in 1:Nfaces
         y= [NodalMesh[nod1,3],NodalMesh[nod2,3]];
         #Se calcula la longitud de la cara
         l=sqrt((x[1]-x[2])^2+(y[1]-y[2])^2);
-
         #Se agrega al vector de cargas
         for j in 1:n_dofs
            Fglo[dofs[j]]+= 0.5*BC_value*l; 
         end
     end
-
 end 
 
 # Una vez acoplado el sistema, se procede a resolver. 
-
 T= Kglo\Fglo;
 #T= lu(Kglo) \ Fglo;  #Usando descomposición LU
 #T= qr(Kglo) \ Fglo;  #Usando descomposición QR
 
+#Se escribe el archivo de salida
 writeVTK(file_name_output,T,["fi"])
 
 

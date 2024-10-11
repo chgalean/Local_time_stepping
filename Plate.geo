@@ -1,12 +1,12 @@
 // Gmsh project created on Sat Sep 28 23:01:22 2024
 //+
-h=0.2;
-Point(1) = {0, 0, 0, h};
+h=0.01;
+Point(1) = {0.5, 0, 0, h};
 Point(2) = {1, 0, 0, h};
 Point(3) = {1, 1, 0, h};
-Point(4) = {2, 1, 0, h};
-Point(5) = {2, 2, 0, h};
-Point(6) = {0, 2, 0, h};
+Point(4) = {0, 1, 0, h};
+Point(5) = {0, 0.5, 0, h};
+Point(6) = {0.5, 0.5, 0, h};
 
 
 //+
@@ -26,5 +26,5 @@ Physical Line(2) = {2,3};
 Physical Line(3) = {4};
 Physical Line(4) = {5,6};
 //+
-Physical Surface(3) = {1};
+Physical Surface(1) = {1};
 
