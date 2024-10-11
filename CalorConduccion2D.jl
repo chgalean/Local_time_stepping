@@ -20,6 +20,7 @@ include("K.jl")                 #Funciòn para evaluar la matriz de rigidez glob
 include("F_l.jl")               #Funciòn para evaluar el vector de cargas elemental
 include("F.jl")                 #Funciòn para evaluar el vector de cargas global
 include("Write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
+include("diff_fcn.jl")          #Funciòn que define el coeficiente de difusión k 
 include("source_fcn.jl")        #Funciòn que define el término fuente Q 
 include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advectivo 
 #########################################################################################
@@ -31,7 +32,6 @@ file_name_mesh=file_name*".msh"
 file_name_output=file_name*".vtk"
 
 nq=3;            #Número de puntos de cuadratura a usar en la integración numérica
-coef_k=0.005;  #Coeficiente del término difusivo
 BC=[0 1;0 0; 0 0; 0 0]  #Se define una matriz con las condiciones de contorno del problema. Cada fila
                         #se refiere a una de los bordes físicos del problema. El valor en la primera columna
                         #define el tipo de condición de borde: 0:Dirichlet 1:Neumann
