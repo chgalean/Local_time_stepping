@@ -1,18 +1,22 @@
 function N_dN(chi,eta,m)
   if m==1
-    N=chi
-    dN_dchi=1.0
-    dN_deta=0.0
+    N=0.25*(1-chi)*(1-eta);
+    dN_dchi=0.25*(eta-1);
+    dN_deta=0.25*(chi-1);
   elseif m==2
-    N=eta
-    dN_dchi=0.0
-    dN_deta=1.0
+    N=0.25*(1+chi)*(1-eta);
+    dN_dchi=0.25*(1-eta);
+    dN_deta=-0.25*(1+chi);
   elseif m==3
-      N=1-chi-eta
-      dN_dchi=-1.0
-      dN_deta=-1.0
+    N=0.25*(1+chi)*(1+eta);
+    dN_dchi=0.25*(eta+1);
+    dN_deta=0.25*(chi+1);
+  elseif m==4
+    N=0.25*(1-chi)*(1+eta);
+    dN_dchi=-0.25*(1+eta);
+    dN_deta=0.25*(1-chi);
   else
-    @assert m < 3
+    @assert m < 4
   end
   return N,dN_dchi,dN_deta
 end

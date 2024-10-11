@@ -14,12 +14,13 @@ include("nodal_coord.jl")       #Funciòn para determinar las coordenadas nodale
 include("N_dN.jl")              #Funciòn para calcular las funciones base y sus derivadas 
 include("Jacobian.jl")          #Funciòn para calcular el Jacobiano 
 include("grad_N.jl")            #Funciòn para calcular el gradiente de una función base 
+include("Gauss_qpoints.jl")     #Funciòn para definir los puntos y pesos de la cuadratura de Gauss
 include("klm_diff.jl")          #Funciòn para calcuar el componente difusivo de la matriz de rigidez elemental
 include("klm_adv.jl")           #Funciòn para calcuar el componente advectivo de la matriz de rigidez elemental
 include("K.jl")                 #Funciòn para evaluar la matriz de rigidez global
 include("F_l.jl")               #Funciòn para evaluar el vector de cargas elemental
 include("F.jl")                 #Funciòn para evaluar el vector de cargas global
-include("Write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
+include("write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
 include("diff_fcn.jl")          #Funciòn que define el coeficiente de difusión k 
 include("source_fcn.jl")        #Funciòn que define el término fuente Q 
 include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advectivo 
@@ -40,7 +41,6 @@ BC=[0 1;0 0; 0 0; 0 0]  #Se define una matriz con las condiciones de contorno de
 #Se lee el archivo en formato MSH2 que contiene la malla
 mesh_file=open(file_name_mesh);
 Nnodos, NodalMesh, Nelem, ConeMat, Nfaces, BounCond = mesh_import_MSH2(mesh_file, plotmesh_flag);
-
 #Se crea una matriz de rigidez global y el vector de cargas global
 Kglo=spzeros(Nnodos, Nnodos);  #La matriz de rigidez se inicializa como una matriz tipo sparse
 Fglo=zeros(Nnodos, 1);
@@ -49,7 +49,7 @@ for i in 1:Nelem
     Kele= K(NodalMesh,ConeMat,i,nq)
     Fele=F(NodalMesh,ConeMat,i,nq);
     #Se definen los grados de libertad asociados al elemento
-    dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4]]
+    dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4] ConeMat[i,5]]
     n_dofs=size(dofs,2)
 
     #Se realiza el aporte elemental a las matrices globales
@@ -97,7 +97,6 @@ for i in 1:Nfaces
         end
     end
 end 
-
 # Una vez acoplado el sistema, se procede a resolver. 
 T= Kglo\Fglo;
 #T= lu(Kglo) \ Fglo;  #Usando descomposición LU
@@ -105,7 +104,3 @@ T= Kglo\Fglo;
 
 #Se escribe el archivo de salida
 writeVTK(file_name_output,T,["fi"])
-
-
-
-
