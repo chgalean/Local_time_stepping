@@ -29,20 +29,20 @@ include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advec
 include("avance_temporal.jl")   #Funciòn con el esquema de avance temporal
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
-plotmesh_flag=0;  #1 para graficar la malla generada
-file_name="Plate_TRIANG3_coarse"
+plotmesh_flag=0  #1 para graficar la malla generada
+file_name="Square_TRIANG3_fine"
 file_name_mesh=file_name*".msh"
 
-nq=3;            #Número de puntos de cuadratura a usar en la integración numérica
-BC=[0 1;0 0; 0 0; 0 0]  #Se define una matriz con las condiciones de contorno del problema. Cada fila
-                        #se refiere a una de los bordes físicos del problema. El valor en la primera columna
-                        #define el tipo de condición de borde: 0:Dirichlet 1:Neumann
-delta_t=0.01   #Paso de tiempo
-Ntime_step=200   #Número de pasos de tiempo
-save_step=10     #Intervalo de guardado de datos
-theta=1.0      #Parámetro para definir el método: 0   =>Forward Euler
-                        #                                  0.5 =>Crank-Nicolson
-                        #                                  1   =>Backward Euler
+nq=3;                 #Número de puntos de cuadratura a usar en la integración numérica
+BC=[0 0;0 0;0 0;0 0]  #Se define una matriz con las condiciones de contorno del problema. Cada fila
+                      #se refiere a una de los bordes físicos del problema. El valor en la primera columna
+                      #define el tipo de condición de borde: 0:Dirichlet 1:Neumann
+delta_t=0.001    #Paso de tiempo
+Ntime_step=6000  #Número de pasos de tiempo
+save_step=100    #Intervalo de guardado de datos
+theta=1.0        #Parámetro para definir el método: 0   =>Forward Euler
+                        #                           0.5 =>Crank-Nicolson
+                        #                           1   =>Backward Euler
 kappa=1e9;     #Constante de pènalizaciòn
 #######################################################################################
 #DISCRETIZACION ESPACIAL
@@ -50,7 +50,12 @@ kappa=1e9;     #Constante de pènalizaciòn
 mesh_file=open(file_name_mesh);
 Nnodos,NodalMesh,Nelem,ConeMat,Nfaces,BounCond,TypeElem = mesh_import_MSH2(mesh_file, plotmesh_flag);
 #Se crea el vector con las condiciones iniciales
-Tini=0.0*ones(Nnodos,1)
+Tini=zeros(Nnodos,1)
+for i in 1:Nnodos
+  xcoord=NodalMesh[i,2]
+  ycoord=NodalMesh[i,3]
+  Tini[i,1]=exp(-((xcoord+0.25)^2+ycoord^2)/0.004)
+end    
 #Se crea el primer archivo de salida
 file_name_output=joinpath(pwd()*"/Sol",file_name*"_0.vtk") 
 writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,Tini,["T"])
@@ -82,12 +87,10 @@ global T=Tini
 for t in 1:Ntime_step
     global cont +=1
     global T=avance_temporal(Cglo,Kglo,Fglo,NodalMesh,BC,BounCond,Nfaces,kappa,theta,T)
-    if cont==10
+    if cont==save_step
       #Se escribe el archivo de salida
       file_name_VTK=joinpath(pwd()*"/Sol",file_name*"_"*string(t)*".vtk") 
       writeVTK(file_name_VTK,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,T,["T"])
       global cont=0
     end
 end
-#T= lu(Kglo) \ Fglo;  #Usando descomposición LU
-#T= qr(Kglo) \ Fglo;  #Usando descomposición QR
