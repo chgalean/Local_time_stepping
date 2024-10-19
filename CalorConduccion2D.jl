@@ -1,6 +1,6 @@
 #Este codigo soluciona la ecuaciòn de difusión-advección
 
-#       ∇̇.(-k∇ϕ)+v.∇ϕ= Q     
+#                      ∇̇.(-k∇ϕ)+v.∇ϕ= Q     
 
 # por el mètodo de elementos fìnitos utilizando un espacio de elementos triangulares.
 # Autor: Cristian Felipe Morales Suàrez
