@@ -27,7 +27,7 @@ include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advec
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 plotmesh_flag=0;  #1 para graficar la malla generada
-file_name="Plate_QUAD8_coarse"
+file_name="Plate_QUAD8_fine"
 file_name_mesh=file_name*".msh"
 file_name_output=file_name*".vtk"
 

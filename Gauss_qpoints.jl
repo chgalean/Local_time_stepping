@@ -1,19 +1,23 @@
 function Gauss_qpoints(nq)
-    chi_gauss=[]
-    eta_gauss=[]
-    pesos=[]
-    if nq==1
-        chi_gauss=[1/3]
-        eta_gauss=[1/3]
-        pesos=[1]
-      elseif nq==3
-          chi_gauss=[1/6 1/6 2/3]
-          eta_gauss=[1/6 2/3 1/6]
-          pesos=[1/3 1/3 1/3]        
-      elseif nq==4
-          chi_gauss=[1/3 1/5 1/5 3/5]
-          eta_gauss=[1/3 1/5 3/5 1/5]
-          pesos=[-0.5625 0.52083333333333 0.52083333333333 0.52083333333333]
-    end
-    return chi_gauss,eta_gauss,pesos
+  chi_gauss=[]
+  eta_gauss=[]
+  pesos=[]
+  if nq==2
+    chi_gauss=[-sqrt(3)/3 sqrt(3)/3]
+    eta_gauss=[-sqrt(3)/3 sqrt(3)/3]
+    pesos=[1 1]
+  elseif nq==3
+      chi_gauss=[-sqrt(15)/5 0 sqrt(15)/5]
+      eta_gauss=[-sqrt(15)/5 0 sqrt(15)/5]
+      pesos=[5/9 8/9 5/9]        
+  elseif nq==4
+      chi_gauss=[-0.8611363115940526 -0.3399810435848563 0.3399810435848563 0.8611363115940526]
+      eta_gauss=[-0.8611363115940526 -0.3399810435848563 0.3399810435848563 0.8611363115940526]
+      pesos=[0.3478548451374539 0.6521451548625461 0.6521451548625461 0.3478548451374539]
+  elseif nq==5
+      chi_gauss=[-0.9061798459386639 -0.5384693101056831 0 0.5384693101056831 0.9061798459386639]
+      eta_gauss=[-0.9061798459386639 -0.5384693101056831 0 0.5384693101056831 0.9061798459386639]
+      pesos=[0.2369268850561891 0.4786286704993665 0.5688888888888889 0.4786286704993665 0.2369268850561891]    
+  end
+  return chi_gauss,eta_gauss,pesos
 end
