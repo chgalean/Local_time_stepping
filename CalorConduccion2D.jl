@@ -27,7 +27,7 @@ include("velocity_fcn.jl")      #Funciòn que define el campo de velocidad advec
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 plotmesh_flag=0;  #1 para graficar la malla generada
-file_name="Plate_TRIANG3_fine"
+file_name="Plate_QUAD8_coarse"
 file_name_mesh=file_name*".msh"
 file_name_output=file_name*".vtk"
 
@@ -49,7 +49,7 @@ for i in 1:Nelem
     Kele= K(NodalMesh, ConeMat,i,nq)
     Fele=F(NodalMesh, ConeMat,i,nq);
     #Se definen los grados de libertad asociados al elemento
-    dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4]]
+    dofs=[ConeMat[i,2] ConeMat[i,3] ConeMat[i,4] ConeMat[i,5] ConeMat[i,6] ConeMat[i,7] ConeMat[i,8] ConeMat[i,9]]
     n_dofs=size(dofs,2)
     #Se realiza el aporte elemental a las matrices globales
     for j in 1:n_dofs
