@@ -1,4 +1,5 @@
 function N_dN_v(chi,eta,m)
+  @assert m <= 8 #Reporta un error si m>8
   if m==1
     N=-(1/4)*(1-chi)*(1-eta)*(1+chi+eta)
     dN_dchi=-((eta-1)*(eta+2*chi))/4
@@ -31,8 +32,6 @@ function N_dN_v(chi,eta,m)
     N=1/2*(chi-1)*(eta^2-1)
     dN_dchi=((eta-1)*(eta+1))/2
     dN_deta=(chi-1)*eta
-  else
-    @assert m < 8
   end
   return N,dN_dchi,dN_deta
 end
