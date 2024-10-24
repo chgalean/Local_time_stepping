@@ -133,10 +133,16 @@ for i in 1:Nfaces
     end
 end 
 # Una vez ensambladas las submatrices se ensabla el sistema general y se resuelve
-C=Bglo*inv(Aglo)
+Kglo=[Aglo transpose(Bglo); Bglo zeros(Nnodos,Nnodos)]
+display(spy(Kglo)) 
+#Fglo=[Fglo;zeros(Nnodos,1)]
+T= Aglo\Fglo;
+U=T[1:2:2*Nnodos]
+V=T[2:2:2*Nnodos]
+#C=Bglo*inv(Aglo)
 #Bglo*inv(Aglo)*transpose(Bglo)=BA−1F−G,
 #T= lu(Kglo) \ Fglo;  #Usando descomposición LU
 #T= qr(Kglo) \ Fglo;  #Usando descomposición QR
 
 #Se escribe el archivo de salida
-#writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,T,["fi"])
+writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,[U V],["U" "V"],[U V],["Velocity"])

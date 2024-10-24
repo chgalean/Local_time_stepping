@@ -1,4 +1,4 @@
-function writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,scalar_values,scalar_label)
+function writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,scalar_values,scalar_label,vector_values,vector_label)
     #Se escribe los resultados en un archivo vtk
     file=open(file_name_output, "w")
     #Se escribe el encabezado
@@ -55,16 +55,27 @@ function writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,scala
     for i=1:Nelem
         write(file, "$VTK_type  \n") 
     end
-    #Se escriben los campos escalares asociados a cada nodo
     write(file, "POINT_DATA $Nnodos \n")
+    #Se escriben los campos escalares asociados a cada nodo
     n_scalar_values=size(scalar_values,2)
     for i in 1:n_scalar_values
         labels=scalar_label[i]
         write(file, "SCALARS $labels float \n")
         write(file, "LOOKUP_TABLE default \n")
         for j = 1:Nnodos
-            val=  scalar_values[j,i]
+            val= scalar_values[j,i]
             write(file, "$val \n");
+        end
+    end
+    #Se escriben los campos vectoriales asociados a cada nodo
+    n_vector_values=size(vector_values,3)
+    for i in 1:n_vector_values
+        labels=vector_label[i]
+        write(file, "VECTORS $labels float \n")
+        for j = 1:Nnodos
+            val_x= vector_values[j,1,i]
+            val_y= vector_values[j,2,i]
+            write(file, "$val_x $val_y 0.0 \n");
         end
     end
     close(file);
