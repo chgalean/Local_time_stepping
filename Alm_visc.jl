@@ -22,7 +22,7 @@ function Alm_visc(l,m,e,ConeMat,NodalMesh,nq)
       _,detJ=Jacobian(chi_gauss[i],eta_gauss[k],e,ConeMat,NodalMesh)
       L_Nm=[gradNm[1] 0; 0 gradNm[2];gradNm[2] gradNm[1]]
       L_Nl=[gradNl[1] 0; 0 gradNl[2];gradNl[2] gradNl[1]]
-      Alm += pesos[i]*pesos[k]*transpose(L_Nl)*D*L_Nm*detJ
+      Alm += pesos[i]*pesos[k]*(L_Nl')*D*L_Nm*detJ
     end
   end
   return Alm

@@ -8,24 +8,25 @@
 #ESPACIO PARA EL LLAMADO DE FUNCIONES Y PAQUETES REQUERIDOS PARA LA SOLUCIÒN DEL SISTEMA
 using Plots
 using DelimitedFiles
-using SparseArrays, LinearAlgebra
-include("mesh_import_MSH2.jl")  #Funcion para importar la malla en formato MSH2
-include("nodal_coord.jl")       #Funciòn para determinar las coordenadas nodales de un elemento 
-include("N_dN_v.jl")            #Funciòn para calcular las funciones base para la velocidad
-include("N_dN_p.jl")            #Funciòn para calcular las funciones base para la presión
-include("Jacobian.jl")          #Funciòn para calcular el Jacobiano 
-include("grad_N_v.jl")          #Funciòn para calcular el gradiente de una función base de velocidad
-include("grad_N_p.jl")          #Funciòn para calcular el gradiente de una función base de presión
-include("Gauss_qpoints.jl")     #Funciòn para definir los puntos y pesos de la cuadratura de Gauss
-include("Alm_visc.jl")          #Funciòn para calcuar la matriz A elemental
-include("A.jl")                 #Funciòn para evaluar la matriz A del término viscoso
-include("Blm_imcomp.jl")        #Funciòn para evaluar la matriz B elemental
-include("B.jl")                 #Funciòn para evaluar la matriz B del término viscoso
-include("F_l.jl")               #Funciòn para evaluar el vector de cargas elemental
-include("F.jl")                 #Funciòn para evaluar el vector de cargas global
-include("write_VTK.jl")         #Funciòn para escribir archivos de salida en formato VTK 
-include("visc_fcn.jl")          #Funciòn que define el coeficiente de difusión k 
-include("body_force_fcn.jl")    #Funciòn que define las fuerzas externas sobre el fluido
+using SparseArrays, LinearAlgebra, MUMPS #MKL,  MKL_jll#, MKL, MUMPS, Pardiso,  LinearSolve
+include("mesh_import_MSH2.jl")  #Función para importar la malla en formato MSH2
+include("nodal_coord.jl")       #Función para determinar las coordenadas nodales de un elemento 
+include("N_dN_v.jl")            #Función para calcular las funciones base para la velocidad
+include("N_dN_p.jl")            #Función para calcular las funciones base para la presión
+include("Jacobian.jl")          #Función para calcular el Jacobiano 
+include("grad_N_v.jl")          #Función para calcular el gradiente de una función base de velocidad
+include("grad_N_p.jl")          #Función para calcular el gradiente de una función base de presión
+include("Gauss_qpoints.jl")     #Función para definir los puntos y pesos de la cuadratura de Gauss
+include("Alm_visc.jl")          #Función para calcuar la matriz A elemental
+include("A.jl")                 #Función para evaluar la matriz A del término viscoso
+include("Blm_imcomp.jl")        #Función para evaluar la matriz B elemental
+include("B.jl")                 #Función para evaluar la matriz B del término viscoso
+include("F_l.jl")               #Función para evaluar el vector de cargas elemental
+include("F.jl")                 #Función para evaluar el vector de cargas global
+include("write_VTK.jl")         #Función para escribir archivos de salida en formato VTK 
+include("visc_fcn.jl")          #Función que define el coeficiente de difusión k 
+include("body_force_fcn.jl")    #Función que define las fuerzas externas sobre el fluido
+include("compute_norm.jl")      #Función para el cálculo de la norma de un campo vectorial 
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 plotmesh_flag=0;  #1 para graficar la malla generada
@@ -33,7 +34,7 @@ file_name="Plate_QUAD4_coarse"
 file_name_mesh=file_name*".msh"
 file_name_output=file_name*".vtk"
 
-nq=3;               #Número de puntos de cuadratura a usar en la integración numérica
+nq=4;               #Número de puntos de cuadratura a usar en la integración numérica
 BC_v=[0 0 0;0 1 0]  #Se define una matriz con las condiciones de contorno de velocidad del problema. Cada fila
                     #se refiere a una de los bordes físicos del problema. El valor en la primera columna
                     #define el tipo de condición de borde: 0:Dirichlet 1:Neumann, la segunda y tercer columna
@@ -132,17 +133,116 @@ for i in 1:Nfaces
         end
     end
 end 
+print("Finaliza el proceso de ensamble \n")
 # Una vez ensambladas las submatrices se ensabla el sistema general y se resuelve
-Kglo=[Aglo transpose(Bglo); Bglo zeros(Nnodos,Nnodos)]
-display(spy(Kglo)) 
+#Kglo=[Aglo transpose(Bglo);Bglo zeros(Nnodos,Nnodos)]
+#display(spy(Kglo)) 
+############################## MUMPS ##########################################
+import MPI
+MPI.Init()
+root = 0
+comm = MPI.COMM_WORLD
+
+mumps0 = MUMPS.Mumps{Float64}(mumps_symmetric, default_icntl, default_cntl64)
+if MPI.Comm_rank(comm) == root
+    MUMPS.associate_matrix!(mumps0, Aglo)
+    MUMPS.associate_rhs!(mumps0, Bglo')
+end
+MUMPS.factorize!(mumps0)
+MUMPS.solve!(mumps0)
+MPI.Barrier(comm)
+if MPI.Comm_rank(comm) == root
+    Schu_comp = Bglo*MUMPS.get_solution(mumps0)
+end
+finalize(mumps0)
+
+mumps1 = MUMPS.Mumps{Float64}(mumps_symmetric, default_icntl, default_cntl64)
+if MPI.Comm_rank(comm) == root
+    MUMPS.associate_matrix!(mumps1, Aglo)
+    MUMPS.associate_rhs!(mumps1, Fglo)
+end
+MUMPS.factorize!(mumps1)
+MUMPS.solve!(mumps1)
+if MPI.Comm_rank(comm) == root
+    RHS = Bglo*MUMPS.get_solution(mumps1)
+end
+finalize(mumps1)
+
+mumps2 = MUMPS.Mumps{Float64}(mumps_symmetric, default_icntl, default_cntl64)
+if MPI.Comm_rank(comm) == root
+    MUMPS.associate_matrix!(mumps2, Schu_comp)
+    MUMPS.associate_rhs!(mumps2, RHS)
+end
+MUMPS.factorize!(mumps2)
+MUMPS.solve!(mumps2)
+if MPI.Comm_rank(comm) == root
+    p = MUMPS.get_solution(mumps2)
+end
+finalize(mumps2)
+
+mumps3 = MUMPS.Mumps{Float64}(mumps_symmetric, default_icntl, default_cntl64)
+if MPI.Comm_rank(comm) == root
+    MUMPS.associate_matrix!(mumps3, Aglo)
+    RHS1=Fglo-Bglo'*p
+    MUMPS.associate_rhs!(mumps3, RHS1)
+end
+MUMPS.factorize!(mumps3)
+MUMPS.solve!(mumps3)
+if MPI.Comm_rank(comm) == root
+    UV = MUMPS.get_solution(mumps3)
+end
+finalize(mumps3)
+####
+#similar(orig_rhs)
+#mumps = MUMPS.Mumps{Float64}(mumps_symmetric)
+#Kglo=[Aglo Bglo'; Bglo zeros(Nnodos,Nnodos)]
+#MUMPS.associate_matrix!(mumps, Kglo)
+#vectx=Vector{Int}(collect(2*Nnodos+1:1:3*Nnodos))
+#MUMPS.mumps_schur_complement!(mumps,vectx)
+
+#MUMPS.mumps_solve!(T,Aglo,Fglo) 
+
+#associate_matrix!(mumps, Kglo)
+#mumps=MUMPS.SparseArrays(Kglo)
+#vectx=spzeros(3*Nnodos,1)
+#vectx[1:2*Nnodos,1].=1;
+#MUMPS.mumps_schur_complement!(mumps,vectx)
+#MPI.Finalize()
+############################## MKLPardiso ##########################################
+#ps = MKLPardisoSolver()
+#set_msglvl!(ps, Pardiso.MESSAGE_LEVEL_ON)
+#Kglo=[Aglo Bglo'; Bglo zeros(Nnodos,Nnodos)]
+#set_nprocs!(ps, 3)
+#Aglo=get_matrix(ps, Aglo, :N)
+#BgloT=get_matrix(ps, Bglo, :N)
+#T=zeros(2*Nnodos,1)
+#RHS=zeros(2*Nnodos,1)
+#pardiso(ps, T, Aglo, Fglo)
+#S=schur_complement(ps,Kglo,Nnodos)
+#S=pardisogetschur(ps)
+#S=schur_complement(ps,Kglo,vectx)
+#S=pardisogetschur(ps)
+#T=solve(ps,Aglo,Bglo'[1:2*Nnodos,1])
+
+#RHS=Bglo*(Aglo\Fglo)
+#p=solve(ps,Sch,RHS)
+#Kglo=Bglo*Sch
+#prob = Aglo\BT[1:2*Nnodos,1]
+#T= Aglo\Fglo;
+#T= Kglo\Fglo;
+#Kglo=[Aglo transpose(Bglo);Bglo zeros(Nnodos,Nnodos)]
 #Fglo=[Fglo;zeros(Nnodos,1)]
-T= Aglo\Fglo;
-U=T[1:2:2*Nnodos]
-V=T[2:2:2*Nnodos]
+#T=Kglo\Fglo
+print("Finaliza la solución del sistema de ecuaciones \n")
+
 #C=Bglo*inv(Aglo)
 #Bglo*inv(Aglo)*transpose(Bglo)=BA−1F−G,
 #T= lu(Kglo) \ Fglo;  #Usando descomposición LU
 #T= qr(Kglo) \ Fglo;  #Usando descomposición QR
 
 #Se escribe el archivo de salida
-writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,[U V],["U" "V"],[U V],["Velocity"])
+U=UV[1:2:2*Nnodos]
+V=UV[2:2:2*Nnodos]
+norm_V=compute_norm([U V])
+writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,norm_V,["|V|"],[U V],["Velocity"])
+#writeVTK(file_name_output,Nnodos,NodalMesh,Nelem,ConeMat,TypeElem,[p],["pressure"],[],[])

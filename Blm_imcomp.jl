@@ -7,7 +7,7 @@ function Blm_imcomp(l,m,e,ConeMat,NodalMesh,nq)
         gradNm=grad_N_v(chi_gauss[i],eta_gauss[k],m,e,ConeMat,NodalMesh)
         _,detJ=Jacobian(chi_gauss[i],eta_gauss[k],e,ConeMat,NodalMesh)
         Nl,_,_=N_dN_p(chi_gauss[i],eta_gauss[k],l)
-        Blm += pesos[i]*pesos[k]*[Nl*gradNm[1] Nl*gradNm[2]]*detJ
+        Blm += -pesos[i]*pesos[k]*Nl*gradNm*detJ
       end
     end
     return Blm

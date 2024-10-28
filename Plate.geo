@@ -1,10 +1,11 @@
 // Gmsh project created on Sat Sep 28 23:01:22 2024
 //+
-h=0.1;
+h=0.05;
+L=1.0;
 Point(1) = {0, 0, 0, h};
-Point(2) = {1, 0, 0, h};
-Point(3) = {1, 1, 0, h};
-Point(4) = {0, 1, 0, h};
+Point(2) = {L, 0, 0, h};
+Point(3) = {L, L, 0, h};
+Point(4) = {0, L, 0, h};
 
 //+
 Line(1) = {1, 2};
