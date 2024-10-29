@@ -1,6 +1,6 @@
 function Jacobian(chi,eta,e,ConeMat,NodalMesh)
     x,y = nodal_coord(e,ConeMat,NodalMesh)
-    n_nod_p=size(x,2)
+    n_nod_p=4
     #Se definen las derivadas de las funciones base
     dN_dchi=zeros(1,n_nod_p)
     dN_deta=zeros(1,n_nod_p)

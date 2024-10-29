@@ -1,8 +1,8 @@
-function F_l(l,e,ConeMat,NodalMesh,nq)
+function F_l(l,e,ConeMat_P,NodalMesh_P,nq)
   #Se definen los puntos y pesos de la cuadratura en función del número de puntos
   chi_gauss,eta_gauss,pesos=Gauss_qpoints(nq)
   #Se toman las coordenadas nodales  
-  x,y = nodal_coord(e,ConeMat,NodalMesh)
+  x,y = nodal_coord(e,ConeMat_P,NodalMesh_P)
   #Número de nodos de presión
   n_nod_p=4
   fl=zeros(2,1)
@@ -17,7 +17,7 @@ function F_l(l,e,ConeMat,NodalMesh,nq)
         end
         BF=body_force_fcn(x_coord,y_coord)
         Nl,_,_=N_dN_v(chi_gauss[i],eta_gauss[k],l)
-        _,detJ=Jacobian(chi_gauss[i],eta_gauss[k],e,ConeMat,NodalMesh)
+        _,detJ=Jacobian(chi_gauss[i],eta_gauss[k],e,ConeMat_P,NodalMesh_P)
         fl += pesos[i]*pesos[k]*Nl*BF*detJ
     end
   end
