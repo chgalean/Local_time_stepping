@@ -8,7 +8,7 @@
 #ESPACIO PARA EL LLAMADO DE FUNCIONES Y PAQUETES REQUERIDOS PARA LA SOLUCIÒN DEL SISTEMA
 using Plots
 using DelimitedFiles
-using SparseArrays, LinearAlgebra, LinearSolve, MUMPS #MKL,  MKL_jll#, MKL, MUMPS, Pardiso,  LinearSolve
+using SparseArrays, LinearAlgebra, LinearSolve, MUMPS,Base.Threads #MKL,  MKL_jll#, MKL, MUMPS, Pardiso,  LinearSolve
 using Dates
 include("mesh_import_MSH2.jl")    #Función para importar la malla en formato MSH2
 include("nodal_coord.jl")         #Función para determinar las coordenadas nodales de un elemento 
@@ -33,14 +33,14 @@ include("compute_norm.jl")        #Función para el cálculo de la norma de un c
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 plotmesh_flag=0;  #1 para graficar la malla generada
-file_name="Plate_coarse"
+file_name="Plate_fine"
 file_name_mesh_P=file_name*"_P.msh"
 file_name_mesh_V=file_name*"_V.msh"
 file_name_output_P=file_name*"_P.vtk"
 file_name_output_V=file_name*"_V.vtk"
 
 nq=4;               #Número de puntos de cuadratura a usar en la integración numérica
-BC_V=[0 0 0;0 10 0]  #Se define una matriz con las condiciones de contorno de velocidad del problema. Cada fila
+BC_V=[0 0 0;0 1 0]  #Se define una matriz con las condiciones de contorno de velocidad del problema. Cada fila
                     #se refiere a una de los bordes físicos del problema. El valor en la primera columna
                     #define el tipo de condición de borde: 0:Dirichlet 1:Neumann, la segunda y tercer columna
                     #definen los valores de la velocidad en x y y, respectivamente.
@@ -57,6 +57,7 @@ Nnodos_P,NodalMesh_P,Nelem_P,ConeMat_P,Nfaces_P,BounCond_P,TypeElem_P = mesh_imp
 
 times=Dates.format(now(), "HH:MM")
 print("Inicia el proceso de ensamble:  " * times * "\n")
+print("Este proceso usa ", Threads.nthreads(), " hilos","\n")
 Aglo, Bglo, Fglo = assembly(Nnodos_V,Nnodos_P,Nelem_V,ConeMat_V,NodalMesh_P,ConeMat_P,Nfaces_V,BounCond_V,BC_V,nq,kappa)
 display(spy([Aglo Bglo'; Bglo zeros(Nnodos_P,Nnodos_P)],title="Sparsity pattern of KG"))
 times=Dates.format(now(), "HH:MM")
