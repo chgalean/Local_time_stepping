@@ -18,13 +18,16 @@ function Alm_visc(l,m,e,ConeMat_P,NodalMesh_P,nq)
         y_coord += y[j]*N
       end
       coeff_nu=visc_fcn(x_coord,y_coord)
+      coeff_kappa=kappa_fcn(x_coord,y_coord)
       D=[2*coeff_nu 0 0; 0 2*coeff_nu 0; 0 0 coeff_nu]
       J,detJ=Jacobian(chi_gauss[i],eta_gauss[k],e,ConeMat_P,NodalMesh_P)
       gradNm=grad_N_v(chi_gauss[i],eta_gauss[k],m,J,detJ)
       gradNl=grad_N_v(chi_gauss[i],eta_gauss[k],l,J,detJ)  
       L_Nm=[gradNm[1] 0; 0 gradNm[2];gradNm[2] gradNm[1]]
       L_Nl=[gradNl[1] 0; 0 gradNl[2];gradNl[2] gradNl[1]]
-      Alm += pesos[i]*pesos[k]*(L_Nl')*D*L_Nm*detJ
+      Nl,_,_=N_dN_v(chi_gauss[i],eta_gauss[k],l)
+      Nm,_,_=N_dN_v(chi_gauss[i],eta_gauss[k],m)
+      Alm += pesos[i]*pesos[k]*(L_Nl'*D*L_Nm + coeff_nu*coeff_kappa*Nl*Nm*Matrix(1.0I, 2, 2))*detJ
     end
   end
   return Alm

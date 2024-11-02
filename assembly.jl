@@ -1,11 +1,13 @@
 function assembly(Nnodos_V,Nnodos_P,Nelem_V,ConeMat_V,NodalMesh_P,ConeMat_P,Nfaces_V,BounCond_V,BC_V,nq,kappa)
-    #Se crea una matriz de rigidez global y el vector de cargas global
+    #Se inicializan las matrices y vectores globales para el ensamble
     Aglo=spzeros(2*Nnodos_V, 2*Nnodos_V);  #La matriz A se inicializa como una matriz tipo sparse
     Bglo=spzeros(Nnodos_P, 2*Nnodos_V);    #La matriz B se inicializa como una matriz tipo sparse
     Fglo=spzeros(2*Nnodos_V, 1);
+    #Se inicializa un arreglo de matrices para ser llenado por cada hilo independientemente y evitar el data-race
     Aglo_vector = [spzeros(2*Nnodos_V,2*Nnodos_V) for i in 1:Threads.nthreads()]
     Bglo_vector = [spzeros(Nnodos_P, 2*Nnodos_V) for i in 1:Threads.nthreads()]
     Fglo_vector = [spzeros(2*Nnodos_V,1) for i in 1:Threads.nthreads()]
+    #Se inicia el recorrido por cada elemento de la malla de forma paralela
     Threads.@threads for i in 1:Nelem_V
         Aele=A(NodalMesh_P,ConeMat_P,i,nq)
         Bele=B(NodalMesh_P,ConeMat_P,i,nq)
@@ -47,10 +49,15 @@ function assembly(Nnodos_V,Nnodos_P,Nelem_V,ConeMat_V,NodalMesh_P,ConeMat_P,Nfac
             Fglo_vector[Threads.threadid()][dofs_v[j]]+= Fele[j];
         end
     end
+    #Se traslada el aporte de cada hilo a las matrices y vectores globales. Esta operación es serial.
     Aglo, Bglo, Fglo = local2global(Aglo_vector,Bglo_vector,Fglo_vector,Aglo,Bglo,Fglo,Threads.nthreads())
+    #Se vacian los vectores para liberar memoria
+    Aglo_vector = []
+    Bglo_vector = []
+    Fglo_vector = []
     #Se aplican las condiciones de frontera  
     #Se hace un recorrido por cada una de las caras externas de la malla 
-    lk1 = ReentrantLock()
+    lk1 = ReentrantLock()  #Se usa lock para evitar la data-race
     Threads.@threads for i in 1:Nfaces_V
         #Se define el grupo fisico al que pertenece la cara
         phys_grp=BounCond_V[i,2];

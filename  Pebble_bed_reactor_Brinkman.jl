@@ -1,9 +1,15 @@
-#Este codigo soluciona la ecuaciòn de difusión-advección
+# Este codigo soluciona la ecuación de Brinkman, que es una mezcla de la ecuación 
+# de Stokes y la ecuación de Darcy. El problema de Brinkman plantea
 
-#       ∇̇.(-k∇ϕ)+v.∇ϕ= Q     
+#       ∇̇.(-mu ∇u)+ ∇p + (mu/kappa) * u = F  sobre Ω 
+#       ∇̇.(u) = 0   sobre Ω
+#       u=Uo   sobre ∂Ω
 
-# por el mètodo de elementos fìnitos utilizando un espacio de elementos triangulares.
-# Autor: Cristian Felipe Morales Suàrez
+# La solución se plantea empleando un campo dual de elementos finitos: Quad8 para interpolar 
+# el campo de velocidad y Quad4 para interpolar el campo de presión. Esto con el fin de 
+# satisfacer la condición inf-sup o condición LBB (Ladyzhenskaya-Babuska-Brezzi). 
+# Autor: Carlos Galeano - Cristian Morales
+# Universidad Nacional de Colombia
 #########################################################################################
 #ESPACIO PARA EL LLAMADO DE FUNCIONES Y PAQUETES REQUERIDOS PARA LA SOLUCIÒN DEL SISTEMA
 using Plots
@@ -28,6 +34,7 @@ include("F.jl")                   #Función para evaluar el vector de cargas glo
 include("local2global.jl")        #Función encargada de llevar los aportes de cada hilo a la matriz global
 include("write_VTK.jl")           #Función para escribir archivos de salida en formato VTK 
 include("visc_fcn.jl")            #Función que define el coeficiente de difusión k 
+include("kappa_fcn.jl")           #Función que define el coeficiente kappa del problema de Brinkman
 include("body_force_fcn.jl")      #Función que define las fuerzas externas sobre el fluido
 include("solve_linear_system.jl") #Función para resolver el sistema de ecuaciones 
 include("compute_norm.jl")        #Función para el cálculo de la norma de un campo vectorial 
@@ -40,11 +47,11 @@ file_name_mesh_V=file_name*"_V.msh"
 file_name_output_P=file_name*"_P.vtk"
 file_name_output_V=file_name*"_V.vtk"
 
-nq=4;               #Número de puntos de cuadratura a usar en la integración numérica
-BC_V=[0 0 0;0 1 0]  #Se define una matriz con las condiciones de contorno de velocidad del problema. Cada fila
-                    #se refiere a una de los bordes físicos del problema. El valor en la primera columna
-                    #define el tipo de condición de borde: 0:Dirichlet 1:Neumann, la segunda y tercer columna
-                    #definen los valores de la velocidad en x y y, respectivamente.
+nq=3;                            #Número de puntos de cuadratura a usar en la integración numérica
+BC_V=[0 0 0;0 1 0;0 0 0; 0 1 0]  #Se define una matriz con las condiciones de contorno de velocidad del problema. Cada fila
+                                 #se refiere a una de los bordes físicos del problema. El valor en la primera columna
+                                 #define el tipo de condición de borde: 0:Dirichlet 1:Neumann, la segunda y tercer columna
+                                 #definen los valores de la velocidad en x y y, respectivamente.
 #Constante de pènalizaciòn
 kappa=1e12;
 #######################################################################################
