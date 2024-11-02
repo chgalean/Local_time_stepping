@@ -40,7 +40,7 @@ file_name_mesh_V=file_name*"_V.msh"
 file_name_output_P=file_name*"_P.vtk"
 file_name_output_V=file_name*"_V.vtk"
 
-nq=4;               #Número de puntos de cuadratura a usar en la integración numérica
+nq=3;               #Número de puntos de cuadratura a usar en la integración numérica
 BC_V=[0 0 0;0 1 0]  #Se define una matriz con las condiciones de contorno de velocidad del problema. Cada fila
                     #se refiere a una de los bordes físicos del problema. El valor en la primera columna
                     #define el tipo de condición de borde: 0:Dirichlet 1:Neumann, la segunda y tercer columna
