@@ -1,9 +1,14 @@
-#Este codigo soluciona la ecuaciòn de difusión-advección
-
-#       ∇̇.(-k∇ϕ)+v.∇ϕ= Q     
-
-# por el mètodo de elementos fìnitos utilizando un espacio de elementos triangulares.
-# Autor: Cristian Felipe Morales Suàrez
+# Este codigo soluciona el problema del flujo de Stokes. Este problema se plantea como
+#
+#       ∇̇.(-mu ∇u)+ ∇p  = F  sobre Ω 
+#       ∇̇.(u) = 0   sobre Ω
+#       u=Uo   sobre ∂Ω
+#
+# La solución se plantea empleando un campo dual de elementos finitos: Quad8 para interpolar 
+# el campo de velocidad y Quad4 para interpolar el campo de presión. Esto con el fin de 
+# satisfacer la condición inf-sup o condición LBB (Ladyzhenskaya-Babuska-Brezzi). 
+# Autor: Carlos Galeano - Cristian Morales
+# Universidad Nacional de Colombia
 #########################################################################################
 #ESPACIO PARA EL LLAMADO DE FUNCIONES Y PAQUETES REQUERIDOS PARA LA SOLUCIÒN DEL SISTEMA
 using Plots
