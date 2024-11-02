@@ -67,7 +67,7 @@ times=Dates.format(now(), "HH:MM")
 print("Inicia el proceso de ensamble:  " * times * "\n")
 print("Este proceso usa ", Threads.nthreads(), " hilos","\n")
 Aglo, Bglo, Fglo = assembly(Nnodos_V,Nnodos_P,Nelem_V,ConeMat_V,NodalMesh_P,ConeMat_P,Nfaces_V,BounCond_V,BC_V,nq,kappa)
-display(spy([Aglo Bglo'; Bglo zeros(Nnodos_P,Nnodos_P)],title="Sparsity pattern of KG"))
+#display(spy([Aglo Bglo'; Bglo zeros(Nnodos_P,Nnodos_P)],title="Sparsity pattern of KG"))
 times=Dates.format(now(), "HH:MM")
 print("Finaliza el proceso de ensamble:  " * times * " \n")
 

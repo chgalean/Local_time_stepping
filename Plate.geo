@@ -1,6 +1,6 @@
 // Gmsh project created on Sat Sep 28 23:01:22 2024
 //+
-h=0.02;
+h=0.015;
 B=2.0;
 H=1.0;
 Point(1) = {0, 0, 0, h};
