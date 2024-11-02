@@ -25,6 +25,7 @@ include("Blm_imcomp.jl")          #Función para evaluar la matriz B elemental
 include("B.jl")                   #Función para evaluar la matriz B del término viscoso
 include("F_l.jl")                 #Función para evaluar el vector de cargas elemental
 include("F.jl")                   #Función para evaluar el vector de cargas global
+include("local2global.jl")        #Función encargada de llevar los aportes de cada hilo a la matriz global
 include("write_VTK.jl")           #Función para escribir archivos de salida en formato VTK 
 include("visc_fcn.jl")            #Función que define el coeficiente de difusión k 
 include("body_force_fcn.jl")      #Función que define las fuerzas externas sobre el fluido
