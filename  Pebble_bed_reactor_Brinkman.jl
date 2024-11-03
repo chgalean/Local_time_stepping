@@ -1,7 +1,7 @@
 # Este codigo soluciona la ecuación de Brinkman, que es una mezcla de la ecuación 
 # de Stokes y la ecuación de Darcy. El problema de Brinkman plantea
 
-#       ∇̇.(-mu ∇u)+ ∇p + (mu/kappa) * u = F  sobre Ω 
+#       ∇̇.(-mu ∇u)+ ∇p + (mu*kappa) * u = F  sobre Ω 
 #       ∇̇.(u) = 0   sobre Ω
 #       u=Uo   sobre ∂Ω
 
@@ -14,7 +14,7 @@
 #ESPACIO PARA EL LLAMADO DE FUNCIONES Y PAQUETES REQUERIDOS PARA LA SOLUCIÒN DEL SISTEMA
 using Plots
 using DelimitedFiles
-using SparseArrays, LinearAlgebra, LinearSolve, MUMPS,Base.Threads #MKL,  MKL_jll#, MKL, MUMPS, Pardiso,  LinearSolve
+using SparseArrays, LinearAlgebra, LinearSolve, MUMPS, Base.Threads #MKL,  MKL_jll#, MKL, MUMPS, Pardiso,  LinearSolve
 using Dates
 include("mesh_import_MSH2.jl")    #Función para importar la malla en formato MSH2
 include("nodal_coord.jl")         #Función para determinar las coordenadas nodales de un elemento 

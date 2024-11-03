@@ -1,8 +1,4 @@
 function assembly(Nnodos_V,Nnodos_P,Nelem_V,ConeMat_V,NodalMesh_P,ConeMat_P,Nfaces_V,BounCond_V,BC_V,nq,kappa)
-    #Se inicializan las matrices y vectores globales para el ensamble
-    Aglo=spzeros(2*Nnodos_V, 2*Nnodos_V);  #La matriz A se inicializa como una matriz tipo sparse
-    Bglo=spzeros(Nnodos_P, 2*Nnodos_V);    #La matriz B se inicializa como una matriz tipo sparse
-    Fglo=spzeros(2*Nnodos_V, 1);
     #Se inicializa un arreglo de matrices para ser llenado por cada hilo independientemente y evitar el data-race
     Aglo_vector = [spzeros(2*Nnodos_V,2*Nnodos_V) for i in 1:Threads.nthreads()]
     Bglo_vector = [spzeros(Nnodos_P, 2*Nnodos_V) for i in 1:Threads.nthreads()]
@@ -49,15 +45,9 @@ function assembly(Nnodos_V,Nnodos_P,Nelem_V,ConeMat_V,NodalMesh_P,ConeMat_P,Nfac
             Fglo_vector[Threads.threadid()][dofs_v[j]]+= Fele[j];
         end
     end
-    #Se traslada el aporte de cada hilo a las matrices y vectores globales. Esta operación es serial.
-    Aglo, Bglo, Fglo = local2global(Aglo_vector,Bglo_vector,Fglo_vector,Aglo,Bglo,Fglo,Threads.nthreads())
-    #Se vacian los vectores para liberar memoria
-    Aglo_vector = []
-    Bglo_vector = []
-    Fglo_vector = []
+    
     #Se aplican las condiciones de frontera  
     #Se hace un recorrido por cada una de las caras externas de la malla 
-    lk1 = ReentrantLock()  #Se usa lock para evitar la data-race
     Threads.@threads for i in 1:Nfaces_V
         #Se define el grupo fisico al que pertenece la cara
         phys_grp=BounCond_V[i,2];
@@ -73,20 +63,15 @@ function assembly(Nnodos_V,Nnodos_P,Nelem_V,ConeMat_V,NodalMesh_P,ConeMat_P,Nfac
         dofs=[2*nod1-1 2*nod1 2*nod2-1 2*nod2 2*nod3-1 2*nod3]
         n_dofs=size(dofs,2)
         if BC_type == 0 #Si se trata de una condición de Dirichlet
-            lock(lk1) 
-            try
-                #Se penalizan los grados de libertad asociados a la velocidad en x 
-                for j in 1:2:n_dofs
-                    Aglo[dofs[j], dofs[j]]+= kappa;
-                    Fglo[dofs[j]]+= BC_value[1]*kappa;
-                end
-                #Se penalizan los grados de libertad asociados a la velocidad en y
-                for j in 2:2:n_dofs
-                    Aglo[dofs[j], dofs[j]]+= kappa;
-                    Fglo[dofs[j]]+= BC_value[2]*kappa;
-                 end
-            finally
-                unlock(lk1)
+            #Se penalizan los grados de libertad asociados a la velocidad en x 
+            for j in 1:2:n_dofs
+                Aglo_vector[Threads.threadid()][dofs[j], dofs[j]]+= kappa;
+                Fglo_vector[Threads.threadid()][dofs[j]]+= BC_value[1]*kappa;
+            end
+            #Se penalizan los grados de libertad asociados a la velocidad en y
+            for j in 2:2:n_dofs
+                Aglo_vector[Threads.threadid()][dofs[j], dofs[j]]+= kappa;
+                Fglo_vector[Threads.threadid()][dofs[j]]+= BC_value[2]*kappa;
             end
         #else 
         #Se ubican las coordenadas de los nodos que forman parte de la cara
@@ -100,5 +85,12 @@ function assembly(Nnodos_V,Nnodos_P,Nelem_V,ConeMat_V,NodalMesh_P,ConeMat_P,Nfac
             #end
         end
     end 
+    #Se inicializan las matrices y vectores globales para el ensamble
+    Aglo=spzeros(2*Nnodos_V, 2*Nnodos_V);  #La matriz Aglo se inicializa como una matriz tipo sparse
+    Bglo=spzeros(Nnodos_P, 2*Nnodos_V);    #La matriz Bglo se inicializa como una matriz tipo sparse
+    Fglo=spzeros(2*Nnodos_V, 1);           #El vector Fglo se inicializa como un arreglo sparse
+    #Se traslada el aporte de cada hilo a las matrices y vectores globales. Esta operación es serial.
+    Aglo, Bglo, Fglo = local2global(Aglo_vector,Bglo_vector,Fglo_vector,Aglo,Bglo,Fglo,Threads.nthreads())
+
 return Aglo, Bglo, Fglo
 end
