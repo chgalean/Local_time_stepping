@@ -14,34 +14,36 @@
 #ESPACIO PARA EL LLAMADO DE FUNCIONES Y PAQUETES REQUERIDOS PARA LA SOLUCIÒN DEL SISTEMA
 using Plots
 using DelimitedFiles
-using SparseArrays, LinearAlgebra, LinearSolve, MUMPS, Base.Threads #MKL,  MKL_jll#, MKL, MUMPS, Pardiso,  LinearSolve
-using Dates n
-include("mesh_import_MSH2.jl")    #Función para importar la malla en formato MSH2
-include("nodal_coord.jl")         #Función para determinar las coordenadas nodales de un elemento 
-include("N_dN_v.jl")              #Función para calcular las funciones base para la velocidad
-include("N_dN_p.jl")              #Función para calcular las funciones base para la presión
-include("Jacobian.jl")            #Función para calcular el Jacobiano 
-include("grad_N_v.jl")            #Función para calcular el gradiente de una función base de velocidad
-include("grad_N_p.jl")            #Función para calcular el gradiente de una función base de presión
-include("Gauss_qpoints.jl")       #Función para definir los puntos y pesos de la cuadratura de Gauss
-include("assembly.jl")            #Función para el ensamble de las matrices y vectores del sistema de ecuaciones
-include("Alm_visc.jl")            #Función para calcuar la matriz A elemental
-include("A.jl")                   #Función para evaluar la matriz A del término viscoso
-include("Blm_imcomp.jl")          #Función para evaluar la matriz B elemental
-include("B.jl")                   #Función para evaluar la matriz B del término viscoso
-include("F_l.jl")                 #Función para evaluar el vector de cargas elemental
-include("F.jl")                   #Función para evaluar el vector de cargas global
-include("local2global.jl")        #Función encargada de llevar los aportes de cada hilo a la matriz global
-include("write_VTK.jl")           #Función para escribir archivos de salida en formato VTK 
-include("visc_fcn.jl")            #Función que define el coeficiente de difusión k 
-include("kappa_fcn.jl")           #Función que define el coeficiente kappa del problema de Brinkman
-include("body_force_fcn.jl")      #Función que define las fuerzas externas sobre el fluido
-include("solve_linear_system.jl") #Función para resolver el sistema de ecuaciones 
-include("compute_norm.jl")        #Función para el cálculo de la norma de un campo vectorial 
+using SparseArrays, LinearAlgebra
+using LinearSolve, MUMPS, Base.Threads, IterativeSolvers #MKL,  MKL_jll#, MKL, MUMPS, Pardiso,  LinearSolve
+using Dates 
+include("mesh_import_MSH2.jl")               #Función para importar la malla en formato MSH2
+include("nodal_coord.jl")                    #Función para determinar las coordenadas nodales de un elemento 
+include("N_dN_v.jl")                         #Función para calcular las funciones base para la velocidad
+include("N_dN_p.jl")                         #Función para calcular las funciones base para la presión
+include("Jacobian.jl")                       #Función para calcular el Jacobiano 
+include("grad_N_v.jl")                       #Función para calcular el gradiente de una función base de velocidad
+include("grad_N_p.jl")                       #Función para calcular el gradiente de una función base de presión
+include("Gauss_qpoints.jl")                  #Función para definir los puntos y pesos de la cuadratura de Gauss
+include("assembly.jl")                       #Función para el ensamble de las matrices y vectores del sistema de ecuaciones
+include("Alm_visc.jl")                       #Función para calcuar la matriz A elemental
+include("A.jl")                              #Función para evaluar la matriz A del término viscoso
+include("Blm_imcomp.jl")                     #Función para evaluar la matriz B elemental
+include("B.jl")                              #Función para evaluar la matriz B del término viscoso
+include("F_l.jl")                            #Función para evaluar el vector de cargas elemental
+include("F.jl")                              #Función para evaluar el vector de cargas global
+include("local2global.jl")                   #Función encargada de llevar los aportes de cada hilo a la matriz global
+include("write_VTK.jl")                      #Función para escribir archivos de salida en formato VTK 
+include("visc_fcn.jl")                       #Función que define el coeficiente de difusión k 
+include("kappa_fcn.jl")                      #Función que define el coeficiente kappa del problema de Brinkman
+include("body_force_fcn.jl")                 #Función que define las fuerzas externas sobre el fluido
+include("direct_solver_linear_system.jl")    #Función para resolver el sistema de ecuaciones usando el método directo con MUMPS
+include("iterative_solver_linear_system.jl") #Función para resolver el sistema de ecuaciones usando un métodos iterativos
+include("compute_norm.jl")                   #Función para el cálculo de la norma de un campo vectorial 
 #########################################################################################
 #PARAMETROS RELACIONADOS AL MODELO
 plotmesh_flag=0;  #1 para graficar la malla generada
-file_name="Plate_fine"
+file_name="Plate_coarse"
 file_name_mesh_P=file_name*"_P.msh"
 file_name_mesh_V=file_name*"_V.msh"
 file_name_output_P=file_name*"_P.vtk"
@@ -75,7 +77,8 @@ print("Finaliza el proceso de ensamble:  " * times * " \n")
 times=Dates.format(now(), "HH:MM")
 print("Inicia la solución del sistema de ecuaciones:  " * times * " \n")
 import MPI
-UV, p = solve_linear_system(Aglo, Bglo, Fglo)
+UV, p = direct_solver_linear_system(Aglo, Bglo, Fglo)
+#UV, p = iterative_solver_linear_system(Aglo, Bglo, Fglo)
 times=Dates.format(now(), "HH:MM")
 print("Finaliza la solución del sistema de ecuaciones:  " * times * " \n")
 

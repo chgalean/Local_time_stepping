@@ -1,4 +1,4 @@
-function solve_linear_system(Aglo, Bglo, Fglo)
+function direct_solver_linear_system(Aglo, Bglo, Fglo)
     ############################## MUMPS ##########################################
     MPI.Init()
     root = 0
