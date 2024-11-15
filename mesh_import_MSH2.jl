@@ -1,4 +1,5 @@
-function mesh_import_MSH2(mesh_file, plotmesh_flag)
+function mesh_import_MSH2(file_name_mesh, plotmesh_flag)
+    mesh_file=open(file_name_mesh);
     #Se abre el archivo que contiene la informacion de la malla
     MeshInf= readlines(mesh_file)
     close(mesh_file)
