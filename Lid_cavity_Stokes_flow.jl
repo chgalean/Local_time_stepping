@@ -55,11 +55,9 @@ kappa=1e12;
 #######################################################################################
 #DISCRETIZACION ESPACIAL
 #Se lee el archivo en formato MSH2 que contiene la malla QUAD8 para interpolar velocidad
-mesh_file_V=open(file_name_mesh_V);
-Nnodos_V,NodalMesh_V,Nelem_V,ConeMat_V,Nfaces_V,BounCond_V,TypeElem_V = mesh_import_MSH2(mesh_file_V, plotmesh_flag);
+Nnodos_V,NodalMesh_V,Nelem_V,ConeMat_V,Nfaces_V,BounCond_V,TypeElem_V = mesh_import_MSH2(file_name_mesh_V, plotmesh_flag);
 #Se lee el archivo en formato MSH2 que contiene la malla QUAD4 para interpolar presión
-mesh_file_P=open(file_name_mesh_P);
-Nnodos_P,NodalMesh_P,Nelem_P,ConeMat_P,Nfaces_P,BounCond_P,TypeElem_P = mesh_import_MSH2(mesh_file_P, plotmesh_flag);
+Nnodos_P,NodalMesh_P,Nelem_P,ConeMat_P,Nfaces_P,BounCond_P,TypeElem_P = mesh_import_MSH2(file_name_mesh_P, plotmesh_flag);
 
 times=Dates.format(now(), "HH:MM")
 print("Inicia el proceso de ensamble:  " * times * "\n")
